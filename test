@@ -1,0 +1,16 @@
+PROGRAM As3;
+CONST x = -47 * 12; y = 12 + (123 + y);
+CONST x = i[-(-8*(-8)) + i, -(-8*(-8)) + i]; x = i.asfsf[d].asdfasf;
+TYPE y = abc; x = xyz;
+TYPE x = ARRAY -8 DIV (-20 MOD i) +5 OF ARRAY -8 DIV (-20 MOD i) +5 OF A;
+TYPE z = RECORD A,B,c,d,e : ARRAY -8 DIV (-20 MOD i) +5 OF A; END;
+VAR a,c,d,d : ARRAY -8 DIV (-20 MOD i) +5 OF ARRAY -8 DIV (-20 MOD i) +5 OF A;
+CONST
+VAR
+TYPE
+TYPE x = RECORD END;
+BEGIN
+A := 50; B := A - 5;
+IF A = B THEN IF A = B THEN IF A = B THEN B := A END END END;
+IF A = B THEN A := B ELSE IF A = C THEN A := C END END
+END As3.

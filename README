@@ -1,0 +1,45 @@
+Zeyu Hao
+zhao7@jhu.edu
+Assignment 5: Semantic Analysis / Abstract Syntax Tree
+
+Makefile
+===================================================================
+There is a simple makefile included that will compile all the Java
+programs needed in the package.
+To use, simple enter 'make' or 'make all'.
+
+
+
+Running the driver
+===================================================================
+The real driver 'Sc.java' is run by a shell script called 'sc'.
+The shell script 'sc' simply takes all command line arguments
+passed to it from bash and feeds it to my Java driver.
+
+The driver is run exactly as described by this assignment:
+./sc -s | -c | -t | -a [-g] [optional_filename]
+if no filename is given, the driver prompts for input from stdin.
+
+Any other form of driver use will cause exceptions to be thrown,
+as well as a message to stderr.
+
+
+
+The Parser
+===================================================================
+Currently, creating the parse tree with -c functions 100% correctly
+with both the textual as well as graphical output via -g. 
+
+The symbol table also functions 100% correctly via the -t function,
+however the textual and graphical output of the symbol table does
+not work correctly according to the assignment 4 instructions.
+Instead, the -s option creates the symbol table and outputs my own
+version of textual output that I've implemented via a toString() 
+method inside Parser.java. This is all for my own testing purposes 
+to verify that the functionality of the syntax table is correct.
+
+The abstract syntax tree created in this assignment (5) does not
+yet function properly. The starting bits and pieces such as the
+the various node classes are there, but I have not finished
+implementing them inside Parser.java yet. Using the -a option will
+simply output "Creating abstract syntax tree" to stdout.
