@@ -8,7 +8,10 @@ public class Array extends Type {
   public Array(Type type, Constant length) {
     this.type = type; // element type
     this.length = length; // length points to a Constant
-    this.node_type = "array";
+  }
+
+  public boolean isArray() {
+    return true;
   }
 
   public Type elemType() {

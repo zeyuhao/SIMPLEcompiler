@@ -7,7 +7,10 @@ public class Record extends Type {
   private Scope fields;
   public Record(Scope fields) {
     this.fields = fields; // fields of the record, of type variable
-    this.node_type = "record";
+  }
+
+  public boolean isRecord() {
+    return true;
   }
 
   public Scope getFields() {

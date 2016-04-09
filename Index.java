@@ -20,6 +20,10 @@ public class Index extends Location {
     }
   }
 
+  public boolean isIndex() {
+    return true;
+  }
+  
   public String toString() {
     return this.loc.toString() + "[" + exp.toString() + "]";
   }

@@ -18,7 +18,7 @@ public class Constant extends Entry {
   }
 
   public String toString() {
-    return "Constant of Type: " + this.type.returnType() +
+    return "Constant of Type: " + this.type.toString() +
       ", Value: " + this.value;
   }
 }

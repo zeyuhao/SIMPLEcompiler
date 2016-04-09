@@ -173,7 +173,7 @@ public class Parser {
 
   private void identifierNotArrayException(Location loc, Token token)
     throws Exception {
-    throw new Exception("Element " + token.toString() + " of Variable " +
+    throw new Exception("Element " + token.toString() + " of Location " +
       loc.toString() + " is not an Array");
   }
 
@@ -192,10 +192,16 @@ public class Parser {
     throw new Exception("Type " + token.toString() + " found in designator");
   }
 
-  private void illegalSelectorException(Token record, Token selector)
+  private void illegalSelectorException(Location loc, Token selector)
     throws Exception {
     throw new Exception("Selector " + selector.toString() + " of record "
-                        + record.toString() + " does not exist");
+                        + loc.toString() + " does not exist");
+  }
+
+  private void nodeNotLocationException(Node node, Token token)
+    throws Exception {
+    throw new Exception("Expected a Location variable but instead found "
+      + token.toString() + " of Node type: " + node.nodeType());
   }
 
   // Initializes the Observer
@@ -260,13 +266,23 @@ public class Parser {
 
   /**
    * Checks that the given Selector of a Record exists.
-   * If not, throw an exception
+   * If the Record or Selector doesn't exist, throw an exception
    */
-  private void find_record(Location loc, Token selector) throws Exception {
-    Record rec = (Record) this.find_entry(loc.getToken()).getType();
-    if (!rec.getFields().local(selector.returnVal())) {
-      this.illegalSelectorException(loc.getToken(), selector);
+  private Record find_record(Location loc, Token selector) throws Exception {
+    Record rec = null;
+    // First check that the Location is a Record Type
+    this.checkRecord(loc);
+    // If Location is an Index, then we can't search directly through S.T
+    // If location is an Entry in S.T, then directly search for it.
+    if (this.isIndex(loc)) {
+      rec = (Record) loc.getType();
+    } else {
+      rec = (Record) this.find_entry(loc.getToken()).getType();
     }
+    if (!rec.getFields().local(selector.returnVal())) {
+      this.illegalSelectorException(loc, selector);
+    }
+    return rec;
   }
 
   /**
@@ -283,6 +299,12 @@ public class Parser {
     return entry;
   }
 
+  /**
+   * Return a Constant entry from Symbol Table
+   * Throw an exception if given Token is not a Constant Type.
+   * @param token the token to search for
+   * return the Constant Entry from Symbol Table
+   */
   private Constant getConstant(Token token) throws Exception {
     if (!this.isConstant(token)) {
       this.identifierNotConstantException(token);
@@ -344,22 +366,35 @@ public class Parser {
     return entry.isVariable();
   }
 
-  private void isArray(Location loc) throws Exception {
-    if (!loc.getType().returnType().equals("array")) {
+  private void checkArray(Location loc) throws Exception {
+    if (!loc.getType().isArray()) {
       this.identifierNotArrayException(loc, loc.getToken());
     }
   }
 
-  private void isRecord(Location loc) throws Exception {
-    if (!loc.getType().returnType().equals("record")) {
+  private void checkRecord(Location loc) throws Exception {
+    if (!loc.getType().isRecord()) {
       this.identifierNotRecordException(loc, loc.getToken());
     }
   }
 
-  private void isInteger(Location loc) throws Exception {
-    if (!loc.getType().returnType().equals("integer")) {
+  private void checkInteger(Location loc) throws Exception {
+    if (!loc.getType().isInteger()) {
       this.identifierNotIntegerException(loc.getToken());
     }
+  }
+
+  private Location getLocation(Node node) throws Exception {
+    if (!node.isLocation()) {
+      this.nodeNotLocationException(node, node.getToken());
+    }
+    // Cast below not really needed, but included for safety
+    return (Location) node;
+  }
+
+  // Check if the location is an Index
+  private boolean isIndex(Location loc) {
+    return loc.isIndex();
   }
 
   /*
@@ -563,11 +598,11 @@ public class Parser {
       exp = new Expression(new Constant(
         this.INTEGER, token.returnIntVal()), token);
     } else if (this.curr_token.isIdentifier()) {
-      // Either we have an Number or Location from a Variable
+      // Either we have a Number or Location from a Variable
       Node node = this.designator();
-      if (node.nodeType().equals("location")) {
+      if (node.isLocation()) {
         exp = new Expression((Location) node);
-      } else if (node.nodeType().equals("expression")) {
+      } else if (node.isExpression()) {
         exp = (Expression) node;
       }
     } else if (this.match_opt(this.OPENPAR)) {
@@ -700,6 +735,8 @@ public class Parser {
   }
 
   // identifier Selector .
+  // TODO: Check that if selector doesn't exist for
+  // variable, this is actually okay?
   private Node designator() throws Exception {
     this.notify("Designator");
     // If current identifier is a Type, throw exception
@@ -708,12 +745,11 @@ public class Parser {
     }
     Node node = null;
     Token token = this.match("identifier");
-    // Create a Variable node if we have a variable
+    // Create a Location node if we have a variable.
+    // Else, create an Expression with a Number if we have a constant
     if (this.isVariable(token)) {
       node = new Location(this.getVariable(token), token);
-    }
-    // Create an Expression with a Number if we have a constant
-    else {
+    } else {
       node = new Expression(this.getConstant(token), token);
     }
     Location select = this.selector(node);
@@ -728,23 +764,22 @@ public class Parser {
   private Location selector(Node node) throws Exception {
     this.notify("Selector");
     Location select = null;
+    Node start = node;
     // Keep checking for an ExpressionList / .Identifier
     boolean done = false;
-    Node start = node;
     while (this.match_opt(this.OPENBR) || this.match_opt(this.PERIOD)) {
-      // Check that node is a Variable, else throw exception
-      this.getVariable(node.getToken());
-      select = (Location) start;
+      // Check that start is a Location, else throw exception
+      select = this.getLocation(start);
       if (this.match_opt(this.OPENBR)) {
         // Check if select is a variable of type Array, else throw exception
-        this.isArray(select);
+        this.checkArray(select);
         select = this.selector_expression(select);
         start = select;
       } else if (this.match_opt(this.PERIOD)) {
-        // Check if loc is a variable of type Record, else throw exception
-        this.isRecord(select);
+        // Check if select is a Variable of type Record, else throw exception
+        this.checkRecord(select);
         this.match(this.PERIOD);
-        this.match("identifier");
+        this.find_record(select, this.match("identifier"));
       }
     }
     this.notify_end();
@@ -757,7 +792,8 @@ public class Parser {
     this.match(this.OPENBR);
     ArrayList<Expression> exp_list = this.expressionList();
     for (Expression exp : exp_list) {
-      this.isArray(array);
+      // Check if select is a variable of type Array, else throw exception
+      this.checkArray(array);
       Index start = new Index(array, exp);
       array = start;
     }

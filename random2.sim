@@ -8,13 +8,22 @@ CONST
   r = m MOD a;
 TYPE
   x = ARRAY 5 OF ARRAY 5 OF INTEGER;
+  u = RECORD a,b,c : INTEGER; END;
 VAR
-  t: RECORD a : x; END;
-  F: ARRAY 5 OF ARRAY 5 OF ARRAY 5 OF RECORD x : INTEGER; END;
+  p: ARRAY 5 OF INTEGER;
+  b: x;
+  t: u;
+  F: ARRAY 5 OF ARRAY 5 OF RECORD v : INTEGER; END;
   Z: INTEGER; (* seed *)
   g: INTEGER; (* temporary *)
 BEGIN
-  F[1,2,3].a := t.a;
+  p := b[1];
+  b[1,10] := a;
+  Z := a;
+  Z := F[1][2].v;
+  Z := F[1];
+  t.b := 3;
+  (*F[1,2].v := t.a;*)
   (* Forever... *)
   WHILE 0 = 0 DO
     (* ...make next random number... *)

@@ -4,8 +4,9 @@ zhao7@jhu.edu
 */
 
 public class Integer extends Type {
-  public Integer() {
-    this.node_type = "integer";
+
+  public boolean isInteger() {
+    return true;
   }
 
   public String toString() {

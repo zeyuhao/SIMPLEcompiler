@@ -4,7 +4,8 @@ zhao7@jhu.edu
 */
 
 public class Instruction extends Node {
-  Instruction next = null;
+  protected Instruction next;
+
   public void setNext(Instruction next) {
     this.next = next;
   }

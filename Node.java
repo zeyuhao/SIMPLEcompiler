@@ -16,7 +16,16 @@ public class Node {
     return this.token;
   }
 
+  // Each Node subclass has its own nodeType()
   public String nodeType() {
-    return this.node_type;
+    return "node";
+  }
+
+  public boolean isExpression() {
+    return false;
+  }
+
+  public boolean isLocation() {
+    return false;
   }
 }

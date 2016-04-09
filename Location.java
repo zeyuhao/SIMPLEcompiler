@@ -6,11 +6,9 @@ zhao7@jhu.edu
 public class Location extends Node {
   private Variable var;
   private Field field;
-  private Index index;
 
   // Default Constructor for Index
   public Location() {
-    this.node_type = "location";
   }
 
   // Variable
@@ -18,7 +16,6 @@ public class Location extends Node {
     this.var = var;
     this.type = this.var.getType();
     this.token = token;
-    this.node_type = "location";
   }
 
   // Field
@@ -26,7 +23,18 @@ public class Location extends Node {
     this.field = field;
     this.type = this.field.getType();
     this.token = token;
-    this.node_type = "location";
+  }
+
+  public String nodeType() {
+    return "location";
+  }
+
+  public boolean isIndex() {
+    return false;
+  }
+
+  public boolean isLocation() {
+    return true;
   }
 
   public String toString() {
