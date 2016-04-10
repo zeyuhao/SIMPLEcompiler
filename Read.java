@@ -9,4 +9,8 @@ public class Read extends Instruction {
   public Read(Location loc) {
     this.loc = loc;
   }
+
+  public String toString() {
+    return "Read:\n  Location =>\n  " + this.loc.toString() + "\n";
+  }
 }

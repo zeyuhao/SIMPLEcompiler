@@ -9,4 +9,8 @@ public class Instruction extends Node {
   public void setNext(Instruction next) {
     this.next = next;
   }
+
+  public Instruction next() {
+    return this.next;
+  }
 }

@@ -20,4 +20,8 @@ public class Type extends Entry {
   public boolean isRecord() {
     return false;
   }
+
+  public String returnType() {
+    return "type";
+  }
 }

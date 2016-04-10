@@ -36,6 +36,14 @@ public class Scope {
     return null;
   }
 
+  // Only search for Entry in current scope (for record searching)
+  public Entry local_find(String name) {
+    if (this.local(name)) {
+      return this.symbol_table.get(name);
+    }
+    return null;
+  }
+
   public boolean local(String name) {
     return this.symbol_table.containsKey(name);
   }

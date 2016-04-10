@@ -82,14 +82,16 @@ public class Parser {
   }
 
   private Token match(Token token) throws Exception {
+    Token tok = null;
     if (this.curr_token.returnType().equals(token.returnType()) &&
         this.curr_token.returnVal().equals(token.returnVal())) {
-      this.notify(token);
+      this.notify(this.curr_token);
+      tok = this.curr_token;
       this.next_token();
     } else {
       this.tokenException(token.returnVal());
     }
-    return token;
+    return tok;
   }
 
   private Token match(String token_type) throws Exception {
@@ -120,8 +122,7 @@ public class Parser {
   private Token match(ArrayList<Token> list) throws Exception {
     for (Token token : list) {
       if (this.match_opt(token)) {
-        this.match(token);
-        return token;
+        return this.match(token);
       }
     }
     return null;
@@ -173,14 +174,14 @@ public class Parser {
 
   private void identifierNotArrayException(Location loc, Token token)
     throws Exception {
-    throw new Exception("Element " + token.toString() + " of Location " +
-      loc.toString() + " is not an Array");
+    throw new Exception("Element " + token.toString() + " of Location \"" +
+      loc.toString() + "\" is not an Array");
   }
 
   private void identifierNotRecordException(Location loc, Token token)
     throws Exception {
-    throw new Exception("Element " + token.toString() + " of Variable " +
-      loc.toString() + " is not a Record");
+    throw new Exception("Element " + token.toString() + " of Variable \"" +
+      loc.toString() + "\" is not a Record");
   }
 
   private void identifierNotIntegerException(Token token) throws Exception {
@@ -202,6 +203,13 @@ public class Parser {
     throws Exception {
     throw new Exception("Expected a Location variable but instead found "
       + token.toString() + " of Node type: " + node.nodeType());
+  }
+
+  private void unmatchedTypeException(Node left, Node right) throws Exception {
+    throw new Exception("Location \"" + left.toString() +
+      "\" is of Type " + left.getType().returnType() +
+      " but found Expression \"" + right.toString() + "\" of Type " +
+      right.getType().returnType());
   }
 
   // Initializes the Observer
@@ -268,21 +276,22 @@ public class Parser {
    * Checks that the given Selector of a Record exists.
    * If the Record or Selector doesn't exist, throw an exception
    */
-  private Record find_record(Location loc, Token selector) throws Exception {
+  private Field find_record(Location loc, Token selector) throws Exception {
     Record rec = null;
     // First check that the Location is a Record Type
     this.checkRecord(loc);
     // If Location is an Index, then we can't search directly through S.T
     // If location is an Entry in S.T, then directly search for it.
-    if (this.isIndex(loc)) {
+    if (loc.isIndex()) {
       rec = (Record) loc.getType();
     } else {
       rec = (Record) this.find_entry(loc.getToken()).getType();
     }
-    if (!rec.getFields().local(selector.returnVal())) {
+    Field field = (Field) rec.getFields().local_find(selector.returnVal());
+    if (field == null) {
       this.illegalSelectorException(loc, selector);
     }
-    return rec;
+    return field;
   }
 
   /**
@@ -392,9 +401,10 @@ public class Parser {
     return (Location) node;
   }
 
-  // Check if the location is an Index
-  private boolean isIndex(Location loc) {
-    return loc.isIndex();
+  private void matchType(Node left, Node right) throws Exception {
+    if (!left.matchType(right)) {
+      this.unmatchedTypeException(left, right);
+    }
   }
 
   /*
@@ -410,7 +420,7 @@ public class Parser {
     this.declarations();
     if (this.match_opt(this.BEGIN)) {
       this.match(this.BEGIN);
-      this.instructions();
+      this.ast = this.instructions();
     }
     this.match(this.END);
     Token last = this.match("identifier");
@@ -561,13 +571,13 @@ public class Parser {
     Token op = null;
     while ((op = this.match(list)) != null) {
       Expression right = this.term();
-      Binary binary = new Binary(op, left, right);
+      Binary binary = new Binary(op, left, right, this.INTEGER);
       left = binary;
     }
     if (zero_op != null) {
       Expression zero = new Expression(new Constant(this.INTEGER, 0),
         new Token("integer", "0", 0, 0));
-      left = new Binary(zero_op, zero, left);
+      left = new Binary(zero_op, zero, left, this.INTEGER);
     }
     this.notify_end();
     return left;
@@ -582,7 +592,7 @@ public class Parser {
     Token op = null;
     while ((op = this.match(list)) != null) {
       Expression right = this.factor();
-      Binary binary = new Binary(op, left, right);
+      Binary binary = new Binary(op, left, right, this.INTEGER);
       left = binary;
     }
     this.notify_end();
@@ -598,6 +608,7 @@ public class Parser {
       exp = new Expression(new Constant(
         this.INTEGER, token.returnIntVal()), token);
     } else if (this.curr_token.isIdentifier()) {
+      Token token = this.curr_token;
       // Either we have a Number or Location from a Variable
       Node node = this.designator();
       if (node.isLocation()) {
@@ -623,35 +634,37 @@ public class Parser {
   }
 
   // Instruction {";" Instruction} .
-  private void instructions() throws Exception {
+  private AST instructions() throws Exception {
     this.notify("Instructions");
-    this.instruction();
+    AST instructions = new AST(this.instruction());
     while (this.match_opt(this.SEMICOLON)) {
       this.match(this.SEMICOLON);
-      this.instruction();
+      instructions.addNode(this.instruction());
     }
     this.notify_end();
+    return instructions;
   }
 
   // Assign | If | Repeat | While | Read | Write .
-  private void instruction() throws Exception {
+  private Instruction instruction() throws Exception {
     this.notify("Instruction");
     if (this.curr_token.isIdentifier()) {
-      this.assign();
+      return this.assign();
     } else if (this.match_opt(this.IF)) {
-      this.If();
+      return this.If();
     } else if (this.match_opt(this.REPEAT)) {
-      this.repeat();
+      return this.repeat();
     } else if (this.match_opt(this.WHILE)) {
-      this.While();
+      return this.While();
     } else if (this.match_opt(this.READ)) {
-      this.read();
+      return this.read();
     } else if (this.match_opt(this.WRITE)) {
-      this.write();
+      return this.write();
     } else {
       this.productionException("Instruction");
     }
     this.notify_end();
+    return null;
   }
 
   // Designator ":=" Expression .
@@ -663,46 +676,56 @@ public class Parser {
     Location loc = (Location) this.designator();
     this.match(this.COLONEQ);
     Expression exp = this.expression();
+    // Check that the Location Type matches the Expression Type, else exception
+    this.matchType(loc, exp);
     assign = new Assign(loc, exp);
     this.notify_end();
     return assign;
   }
 
   // "IF" Condition "THEN" Instructions ["ELSE" Instructions] "END" .
-  private void If() throws Exception {
+  private Instruction If() throws Exception {
+    If if_ = null;
     this.notify("If");
     this.match(this.IF);
-    this.condition();
+    Condition cond = this.condition();
     this.match(this.THEN);
-    this.instructions();
+    AST ins_true = this.instructions();
     if (this.match_opt(this.ELSE)) {
       this.match(this.ELSE);
-      this.instructions();
+      AST ins_false = this.instructions();
+      if_ = new If(cond, ins_true, ins_false);
+    } else {
+      if_ = new If(cond, ins_true);
     }
     this.match(this.END);
     this.notify_end();
+    return if_;
   }
 
   // "REPEAT" Instructions "UNTIL" Condition "END" .
-  private void repeat() throws Exception {
+  private Instruction repeat() throws Exception {
     this.notify("Repeat");
     this.match(this.REPEAT);
-    this.instructions();
+    AST instr = this.instructions();
     this.match(this.UNTIL);
-    this.condition();
+    Condition cond = this.condition();
     this.match(this.END);
     this.notify_end();
+    return new Repeat(cond, instr);
   }
 
   // "WHILE" Condition "DO" Instructions "END" .
-  private void While() throws Exception {
+  private Instruction While() throws Exception {
     this.notify("While");
     this.match(this.WHILE);
-    this.condition();
+    Condition cond = this.condition();
     this.match(this.DO);
-    this.instructions();
+    AST instr = this.instructions();
     this.match(this.END);
     this.notify_end();
+    AST repeat = new AST(new Repeat(cond, instr));
+    return new If(cond, repeat);
   }
 
   // Expression ("="|"#"|"<"|">"|"<="|">=") Expression .
@@ -719,19 +742,24 @@ public class Parser {
   }
 
   // "WRITE" Expression .
-  private void write() throws Exception {
+  private Instruction write() throws Exception {
     this.notify("Write");
     this.match(this.WRITE);
-    this.expression();
+    Expression exp = this.expression();
     this.notify_end();
+    return new Write(exp);
   }
 
   // "READ" Designator .
-  private void read() throws Exception {
+  private Instruction read() throws Exception {
     this.notify("Read");
     this.match(this.READ);
-    this.designator();
+    // Check that designator returns a Location
+    Location loc = this.getLocation(this.designator());
+    // Check that the Location holds a variable of Type Integer
+    this.checkInteger(loc);
     this.notify_end();
+    return new Read(loc);
   }
 
   // identifier Selector .
@@ -779,7 +807,10 @@ public class Parser {
         // Check if select is a Variable of type Record, else throw exception
         this.checkRecord(select);
         this.match(this.PERIOD);
-        this.find_record(select, this.match("identifier"));
+        Token selector = this.match("identifier");
+        // Check that the field of the record exists, else throw exception
+        Field field = this.find_record(select, selector);
+        select = new RecordField(select, field, selector);
       }
     }
     this.notify_end();
@@ -834,6 +865,6 @@ public class Parser {
   }
 
   public String toString() {
-    return this.curr_scope.toString();
+    return this.ast.toString() + "\n" + this.curr_scope.toString();
   }
 }

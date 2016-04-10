@@ -4,13 +4,9 @@ zhao7@jhu.edu
 */
 
 // Field is the equivalent of a Variable Entry for Record Types
-public class Field extends Entry {
+public class Field extends Variable {
   public Field(Type type) {
-    this.type = type;
-  }
-
-  public boolean isVariable() {
-    return true;
+    super(type);
   }
 
   public String toString() {

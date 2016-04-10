@@ -6,7 +6,6 @@ zhao7@jhu.edu
 public class Expression extends Node {
   private Constant number;
   private Location loc;
-  private Type type;
 
   // Default constructor for Binary
   public Expression() {
@@ -34,8 +33,10 @@ public class Expression extends Node {
 
   public String toString() {
     String str = "";
-    if (this.number != null || this.loc != null) {
-      str = this.token.returnVal();
+    if (this.number != null) {
+      str += this.token.returnVal();
+    } else if (this.loc != null) {
+      str = this.loc.toString();
     }
     return str;
   }

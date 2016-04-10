@@ -11,4 +11,9 @@ public class Assign extends Instruction {
     this.loc = loc;
     this.exp = exp;
   }
+
+  public String toString() {
+    return "Assign:\n  Location =>\n    " + this.loc.toString() +
+                  "\n  Expression =>\n    " + this.exp.toString() + "\n";
+  }
 }

@@ -9,6 +9,10 @@ public class Integer extends Type {
     return true;
   }
 
+  public String returnType() {
+    return "Integer";
+  }
+
   public String toString() {
     return "Integer";
   }

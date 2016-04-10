@@ -5,20 +5,28 @@ zhao7@jhu.edu
 
 public class If extends Instruction {
   private Condition cond;
-  private Instruction instr_true;
-  private Instruction instr_false;
+  private AST instr_true;
+  private AST instr_false;
 
   // If constructor with an ELSE Instruction
-  public If(Condition cond, Instruction instr_true, Instruction instr_false) {
+  public If(Condition cond, AST instr_true, AST instr_false) {
     this.cond = cond;
     this.instr_true = instr_true;
     this.instr_false = instr_false;
   }
 
   // If constructor with no ELSE Instruction
-  public If(Condition cond, Instruction instr_true) {
+  public If(Condition cond, AST instr_true) {
     this.cond = cond;
     this.instr_true = instr_true;
   }
 
+  public String toString() {
+    String str = "If:\nCondition =>\n  " + this.cond.toString() +
+      "True =>\n  " + this.instr_true.toString();
+    if (this.instr_false != null) {
+      str += "false =>\n  " + this.instr_false.toString();
+    }
+    return str;
+  }
 }

@@ -13,6 +13,10 @@ public class Record extends Type {
     return true;
   }
 
+  public String returnType() {
+    return "Record";
+  }
+
   public Scope getFields() {
     return this.fields;
   }

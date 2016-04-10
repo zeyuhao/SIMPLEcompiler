@@ -14,6 +14,10 @@ public class Array extends Type {
     return true;
   }
 
+  public String returnType() {
+    return "Array";
+  }
+
   public Type elemType() {
     return this.type;
   }
