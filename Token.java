@@ -46,6 +46,10 @@ public class Token {
     return this.position;
   }
 
+  public String posString() {
+    return "@(" + this.position[0] + ", " + this.position[1] + ")";
+  }
+
   public String toString() {
     String str = "";
     if (this.isKeyword() || this.type.equals("eof")) {

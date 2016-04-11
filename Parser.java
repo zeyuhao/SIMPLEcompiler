@@ -46,7 +46,6 @@ public class Parser {
   private static final Token CLOSEBR = new Token("keyword", "]", 0, 0);
   private static final Token COMMA = new Token("keyword", ",", 0, 0);
   private static final Token EOF = new Token("eof", "eof", 0, 0);
-  private static final int curr_val = 5; // the current value, 5 for now
 
   private ArrayList<Token> tokens; // list of tokens we are parsing
   private Observer obs; // Observer to attach to this Parser
@@ -83,8 +82,7 @@ public class Parser {
 
   private Token match(Token token) throws Exception {
     Token tok = null;
-    if (this.curr_token.returnType().equals(token.returnType()) &&
-        this.curr_token.returnVal().equals(token.returnVal())) {
+    if (this.match_opt(token)) {
       this.notify(this.curr_token);
       tok = this.curr_token;
       this.next_token();
@@ -184,10 +182,24 @@ public class Parser {
       loc.toString() + "\" is not a Record");
   }
 
-  private void identifierNotIntegerException(Token token) throws Exception {
-    throw new Exception("Variable " + token.toString() + " is not an Integer");
+  private void identifierNotIntegerException(Node node, Token token)
+    throws Exception {
+    throw new Exception(node.toString() +  token.posString() +
+      " is not an Integer");
   }
 
+  private void expressionNotPositiveConstantException(Node node, Token token)
+    throws Exception {
+    throw new Exception("Expression (" + node.toString() + ")" +
+      token.posString() + " must be constant, of type integer, " +
+      "and greater than zero");
+  }
+
+  private void expressionNotConstantException(Node node, Token token)
+    throws Exception {
+    throw new Exception("Expression (" + node.toString() + ")" +
+      token.posString() + " must be a constant, of type integer");
+  }
 
   private void typeInDesignatorException(Token token) throws Exception {
     throw new Exception("Type " + token.toString() + " found in designator");
@@ -332,6 +344,55 @@ public class Parser {
   }
 
   /**
+   * Return true if Expression is a Constant/literal greater than 0, else false
+   */
+  private boolean checkPositiveConstant(Expression exp) throws Exception {
+    String name = exp.getToken().returnVal();
+    Entry entry = this.curr_scope.find(name);
+    // If Expression points to an Entry in S.T
+    if (entry != null) {
+      if (!entry.isConstant()) {
+        return false;
+      }
+      // Greater than 0?
+      else if (((Constant) entry).returnVal() <= 0) {
+        return false;
+      }
+    // Else if we have a Literal not declared in S.T
+    } else {
+      if (!exp.isConstant()) {
+        return false;
+      }
+      // Greater than 0?
+      else if (exp.getToken().returnIntVal() <= 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Return true if Expression is a Constant/literal, else false
+   *
+   */
+  private Boolean checkConstant(Expression exp) throws Exception {
+    String name = exp.getToken().returnVal();
+    Entry entry = this.curr_scope.find(name);
+    // If Expression points to an Entry in S.T
+    if (entry != null) {
+      if (!entry.isConstant()) {
+        return false;
+      }
+    // Else if we have a Literal not declared in S.T
+    } else {
+      if (!exp.isConstant()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Return the Entry Type associated with a given identifier name.
    * If identifier is not a Type, throw exception
    * @return entry the found Type
@@ -387,9 +448,9 @@ public class Parser {
     }
   }
 
-  private void checkInteger(Location loc) throws Exception {
-    if (!loc.getType().isInteger()) {
-      this.identifierNotIntegerException(loc.getToken());
+  private void checkInteger(Node node) throws Exception {
+    if (!node.getType().isInteger()) {
+      this.identifierNotIntegerException(node, node.getToken());
     }
   }
 
@@ -463,12 +524,16 @@ public class Parser {
       Token curr = this.match("identifier");
       // = is required
       this.match(this.EQUAL);
-      // Expression is required
-      this.expression();
+      // Expression that is a Constant (completely foldable) is required
+      Expression exp = this.expression();
+      if (!this.checkConstant(exp)) {
+        this.expressionNotConstantException(exp, exp.getToken());
+      }
       // ; is required
       this.match(this.SEMICOLON);
       // Insert a new ConstDecl into symbol table
-      this.table_insert(curr, new Constant(this.INTEGER, this.curr_val));
+      int value = exp.returnNumber().returnVal();
+      this.table_insert(curr, new Constant(this.INTEGER, value));
     }
     this.notify_end();
   }
@@ -533,10 +598,14 @@ public class Parser {
   // "ARRAY" Expression "OF" Type
   private Type array() throws Exception {
     this.match(this.ARRAY);
-    this.expression();
+    Expression exp = this.expression();
+    if (!this.checkPositiveConstant(exp)) {
+      this.expressionNotPositiveConstantException(exp, exp.getToken());
+    }
     this.match(this.OF);
     Type array_type = this.type();
-    return new Array(array_type, new Constant(this.INTEGER, this.curr_val));
+    int value = exp.returnNumber().returnVal();
+    return new Array(array_type, new Constant(this.INTEGER, value));
   }
 
   // "RECORD" {IdentifierList ":" Type ";"} "END"
@@ -565,19 +634,31 @@ public class Parser {
     ArrayList<Token> list =
       new ArrayList<Token>(Arrays.asList(this.PLUS, this.MINUS));
     this.notify("Expression");
-    // If + or -, we are either doing 0 + (Expression) or 0 - (Expression)
     Token zero_op = this.match(list);
+    // First term here
     Expression left = this.term();
+    // Operator next
     Token op = null;
     while ((op = this.match(list)) != null) {
+      // Second term here
       Expression right = this.term();
       Binary binary = new Binary(op, left, right, this.INTEGER);
-      left = binary;
+      // Constant folding here
+      // If fold() returns null, means binary is not constant
+      if ((left = binary.fold()) == null) {
+        left = binary;
+      }
     }
+    // If + or -, we are either doing 0 + (Expression) or 0 - (Expression)
     if (zero_op != null) {
       Expression zero = new Expression(new Constant(this.INTEGER, 0),
         new Token("integer", "0", 0, 0));
-      left = new Binary(zero_op, zero, left, this.INTEGER);
+      Binary binary = new Binary(zero_op, zero, left, this.INTEGER);
+      // Constant folding here
+      // If fold() returns null, means binary is not constant
+      if ((left = binary.fold()) == null) {
+        left = binary;
+      }
     }
     this.notify_end();
     return left;
@@ -593,7 +674,11 @@ public class Parser {
     while ((op = this.match(list)) != null) {
       Expression right = this.factor();
       Binary binary = new Binary(op, left, right, this.INTEGER);
-      left = binary;
+      // Constant folding here
+      // If fold() returns null, means binary is not constant
+      if ((left = binary.fold()) == null) {
+        left = binary;
+      }
     }
     this.notify_end();
     return left;
@@ -746,6 +831,8 @@ public class Parser {
     this.notify("Write");
     this.match(this.WRITE);
     Expression exp = this.expression();
+    // Check that the Expression holds a an Integer Type
+    this.checkInteger(exp);
     this.notify_end();
     return new Write(exp);
   }
@@ -763,8 +850,6 @@ public class Parser {
   }
 
   // identifier Selector .
-  // TODO: Check that if selector doesn't exist for
-  // variable, this is actually okay?
   private Node designator() throws Exception {
     this.notify("Designator");
     // If current identifier is a Type, throw exception

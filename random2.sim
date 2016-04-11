@@ -2,20 +2,22 @@
 
 PROGRAM Random;
 CONST
-  a = 16807;
-  m = 2147483647;
+  a = 5;
+  m = 11;
   q = m DIV a;
   r = m MOD a;
+  d = q + a;
 TYPE
-  x = ARRAY 5 OF ARRAY 5 OF INTEGER;
+  x = ARRAY m OF ARRAY m OF INTEGER;
   u = RECORD a,b,c : INTEGER; END;
 VAR
-  p: ARRAY 5 OF INTEGER;
+  p: ARRAY m OF INTEGER;
   b: x;
   t: u;
-  F: ARRAY 5 OF ARRAY 5 OF RECORD v : INTEGER; END;
+  F: ARRAY m OF ARRAY m OF RECORD v : INTEGER; END;
   Z: INTEGER; (* seed *)
   g: INTEGER; (* temporary *)
+  l: ARRAY m OF INTEGER;
 BEGIN
   p := p;
   b[1][2] := a;
@@ -25,12 +27,12 @@ BEGIN
   t.b := 3;
   F[1,2].v := t.a;
   IF g > 0 THEN Z := g ELSE Z := g + m END;
-  WRITE a;
-  READ Z;
+  WRITE F[1][2].v;
+  READ p[2];
   REPEAT WRITE a UNTIL Z > 2 END;
-  WHILE 0 = 0 DO
+  WHILE 4 = 4 DO
     (* ...make next random number... *)
-    g := a*(Z MOD q) - r*(Z DIV q);
+    g := a*(a + a) - m*(a + m);
     IF g > 0 THEN Z := g ELSE Z := g + m END;
     (* ...and print it. *)
     WRITE Z

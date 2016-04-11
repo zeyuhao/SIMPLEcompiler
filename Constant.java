@@ -4,6 +4,8 @@ zhao7@jhu.edu
 */
 
 public class Constant extends Entry {
+  private int value;
+  
   public Constant(Type type, int value) {
     this.type = type;
     this.value = value;

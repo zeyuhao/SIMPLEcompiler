@@ -11,12 +11,14 @@ public class Expression extends Node {
   public Expression() {
   }
 
+  // Constructor for a Number Expression (Constant)
   public Expression(Constant number, Token token) {
     this.number = number;
     this.type = number.getType();
     this.token = token;
   }
 
+  // Constructor for a Location Expression
   public Expression(Location loc) {
     this.loc = loc;
     this.type = loc.getType();
@@ -29,6 +31,14 @@ public class Expression extends Node {
 
   public boolean isExpression() {
     return true;
+  }
+
+  public boolean isConstant() {
+    return (this.number != null && this.type.isInteger());
+  }
+
+  public Constant returnNumber() {
+    return this.number;
   }
 
   public String toString() {

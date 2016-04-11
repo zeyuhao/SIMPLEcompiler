@@ -5,7 +5,6 @@ zhao7@jhu.edu
 
 public class Entry {
   protected Type type;
-  protected int value;
 
   public boolean isType() {
     return false;
