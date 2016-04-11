@@ -27,6 +27,6 @@ public class Array extends Type {
   }
 
   public String toString() {
-    return "Array " + this.length.toString() + " of " + this.type.toString();
+    return "Array " + this.length.returnVal() + " of " + this.type.toString();
   }
 }

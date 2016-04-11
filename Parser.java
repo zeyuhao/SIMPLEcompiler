@@ -218,10 +218,12 @@ public class Parser {
   }
 
   private void unmatchedTypeException(Node left, Node right) throws Exception {
-    throw new Exception("Location \"" + left.toString() +
-      "\" is of Type " + left.getType().returnType() +
-      " but found Expression \"" + right.toString() + "\" of Type " +
-      right.getType().returnType());
+    throw new Exception("Mismatched Types in assignment:\n" +
+      "Location " + left.toString() + left.getToken().posString() +
+      " is of Type: " + left.getType().toString() +
+      "\nbut found Expression " + right.toString() +
+      right.getToken().posString() + " of Type: " +
+      right.getType().toString());
   }
 
   // Initializes the Observer
@@ -463,7 +465,7 @@ public class Parser {
   }
 
   private void matchType(Node left, Node right) throws Exception {
-    if (!left.matchType(right)) {
+    if (!left.getType().matchType(right.getType())) {
       this.unmatchedTypeException(left, right);
     }
   }
@@ -615,15 +617,16 @@ public class Parser {
     Scope rec_scope = new Scope(this.curr_scope);
     // Set the current Scope to the new Scope
     this.curr_scope = rec_scope;
+    Type curr_type = null;
     while (this.curr_token.isIdentifier()) {
       ArrayList<Token> id_list = this.identifierList();
       this.match(this.COLON);
-      Type curr_type = this.type();
+      curr_type = this.type();
       this.match(this.SEMICOLON);
       this.record_insert(id_list, curr_type);
     }
     this.match(this.END);
-    Record rec = new Record(rec_scope);
+    Record rec = new Record(rec_scope, curr_type);
     this.curr_scope = rec_scope.getParent();
     rec_scope.setParent(null);
     return rec;

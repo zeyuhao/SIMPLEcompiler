@@ -12,7 +12,7 @@ public class Index extends Location {
     this.loc = loc;
     this.exp = exp;
     this.token = exp.getToken();
-    this.type = ((Array) loc.getType()).elemType();
+    this.type = ((Array) loc.getType()).getType();
     // Makes sure that the Index is referenced by an Integer
     if (!this.exp.getType().isInteger()) {
       throw new Exception("Expression in Index must be an Integer, found " +
