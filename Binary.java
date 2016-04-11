@@ -22,10 +22,10 @@ public class Binary extends Expression {
         !this.exp_right.getType().isInteger()) {
       throw new Exception("Operator " + operator.toString() + " is only " +
         "applicable to Expressions of the Integer Type." +
-        "\nFound " + exp_left.getToken().toString() + " of Type " +
-        exp_left.getType().returnType() +
-        "\nFound " + exp_right.getToken().toString() + " of Type " +
-        exp_right.getType().returnType());
+        "\nFound " + exp_left.toString() + exp_left.getToken().posString() +
+        " of Type " + exp_left.getType().returnType() +
+        "\nFound " + exp_right.toString() + exp_right.getToken().posString() +
+        " of Type " + exp_right.getType().returnType());
     }
     this.token = exp_left.getToken();
   }
