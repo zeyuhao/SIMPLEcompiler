@@ -14,16 +14,16 @@ public class Index extends Location {
     this.token = exp.getToken();
     this.type = ((Array) loc.getType()).elemType();
     // Makes sure that the Index is referenced by an Integer
-    if (!this.token.isInteger()) {
-      throw new Exception("Expression in Index must be Integer, found " +
-        this.token.toString());
+    if (!this.exp.getType().isInteger()) {
+      throw new Exception("Expression in Index must be an Integer, found " +
+        this.exp.toString() + " of Type " + this.exp.getType().returnType());
     }
   }
 
   public boolean isIndex() {
     return true;
   }
-  
+
   public String toString() {
     return this.loc.toString() + "[" + exp.toString() + "]";
   }
