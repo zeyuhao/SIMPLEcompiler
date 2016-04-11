@@ -23,6 +23,14 @@ public class Condition extends Node {
     }
   }
 
+  public Expression getLeft() {
+    return this.left;
+  }
+
+  public Expression getRight() {
+    return this.right;
+  }
+
   public String toString() {
     return "Condition (" + this.relation.returnVal() + ")" +
       "\nLeft =>\n  " + this.left.toString() +

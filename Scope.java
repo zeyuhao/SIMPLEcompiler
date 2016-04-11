@@ -61,7 +61,7 @@ public class Scope {
     for (Map.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
       String key = entry.getKey();
       Entry value = entry.getValue();
-      str += key + " - " + value.toString();
+      str += key + " - " + value.toString() + "\n";
     }
     return str;
   }

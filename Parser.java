@@ -812,7 +812,11 @@ public class Parser {
     AST instr = this.instructions();
     this.match(this.END);
     this.notify_end();
-    AST repeat = new AST(new Repeat(cond, instr));
+    // Set # as the operator for a new Condition for the Repeat
+    Condition repeat_cond = new Condition(
+      this.HASHTAG, cond.getLeft(), cond.getRight());
+    AST repeat = new AST(new Repeat(repeat_cond, instr));
+    // Nest the Repeat inside an If
     return new If(cond, repeat);
   }
 

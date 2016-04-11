@@ -34,7 +34,7 @@ public class Binary extends Expression {
     return exp_left.isConstant() && exp_right.isConstant();
   }
 
-  public Expression fold() {
+  public Expression fold() throws Exception {
     // If expressions in Binary aren't Constant, then return null
     if (this.isConstant()) {
       int left = this.exp_left.returnNumber().returnVal();
@@ -55,11 +55,21 @@ public class Binary extends Expression {
           new Constant(this.type, ans),
           new Token("integer", Integer.toString(ans), 0 , 0));
       } else if (this.operator.returnVal().equals("DIV")) {
+        // Check for divide by Zero cases
+        if (right == 0) {
+          throw new Exception("Divide by zero found in Expression: " +
+            this.toString()+ this.exp_right.getToken().posString());
+        }
         int ans = left / right;
         return new Expression(
           new Constant(this.type, ans),
           new Token("integer", Integer.toString(ans), 0 , 0));
       } else if (this.operator.returnVal().equals("MOD")) {
+        // Check for mod by Zero cases
+        if (right == 0) {
+          throw new Exception("MOD by zero found in Expression: " +
+            this.toString()+ this.exp_right.getToken().posString());
+        }
         int ans = left % right;
         return new Expression(
           new Constant(this.type, ans),
