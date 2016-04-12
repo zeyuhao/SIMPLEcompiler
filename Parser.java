@@ -735,24 +735,25 @@ public class Parser {
 
   // Assign | If | Repeat | While | Read | Write .
   private Instruction instruction() throws Exception {
+    Instruction instr = null;
     this.notify("Instruction");
     if (this.curr_token.isIdentifier()) {
-      return this.assign();
+      instr = this.assign();
     } else if (this.match_opt(this.IF)) {
-      return this.If();
+      instr = this.If();
     } else if (this.match_opt(this.REPEAT)) {
-      return this.repeat();
+      instr = this.repeat();
     } else if (this.match_opt(this.WHILE)) {
-      return this.While();
+      instr = this.While();
     } else if (this.match_opt(this.READ)) {
-      return this.read();
+      instr = this.read();
     } else if (this.match_opt(this.WRITE)) {
-      return this.write();
+      instr = this.write();
     } else {
       this.productionException("Instruction");
     }
     this.notify_end();
-    return null;
+    return instr;
   }
 
   // Designator ":=" Expression .
@@ -956,7 +957,11 @@ public class Parser {
     this.program();
   }
 
-  public String toString() {
-    return this.ast.toString() + "\n" + this.curr_scope.toString();
+  public String returnST() {
+    return this.curr_scope.toString();
+  }
+  
+  public String returnAST() {
+    return this.ast.toString();
   }
 }

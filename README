@@ -1,31 +1,38 @@
 Zeyu Hao
 zhao7@jhu.edu
-Assignment 5: Semantic Analysis / Abstract Syntax Tree
+Assignment 7: Simple Code Generator
 
 Makefile
 ===================================================================
 There is a simple makefile included that will compile all the Java
 programs needed in the package.
-To use, simple enter 'make' or 'make all'.
+To use, simply enter 'make' or 'make all'.
 
 
 
-Running the driver
+Driver Details
 ===================================================================
-The real driver 'Sc.java' is run by a shell script called 'sc'.
+The driver 'Sc.java' is run by a shell script called 'sc'.
 The shell script 'sc' simply takes all command line arguments
 passed to it from bash and feeds it to my Java driver.
 
-The driver is run exactly as described by this assignment:
-./sc -s | -c | -t | -a [-g] [optional_filename]
-if no filename is given, the driver prompts for input from stdin.
+Driver Usage:
+./sc [-s | -c | -t | -a | -i] [-g] [optional_filename]
 
-Any other form of driver use will cause exceptions to be thrown,
-as well as a message to stderr.
+If no command line arguments are given, the code generator will run.
+If no filename is given, the driver prompts for input from stdin.
+-s runs the Scanner
+-c runs the Concrete Syntax Tree generator
+-t runs the Symbol Table generator
+-a runs the Abstract Syntax Tree generator 
+-i runs the Interpreter
+-g adds graphical output to the compiler functions above
+   (must be used with -c, -t, or -a)
 
 
 
-The Parser
+
+Compiler Details
 ===================================================================
 Currently, creating the parse tree with -c functions 100% correctly
 with both the textual as well as graphical output via -g. 
@@ -33,13 +40,27 @@ with both the textual as well as graphical output via -g.
 The symbol table also functions 100% correctly via the -t function,
 however the textual and graphical output of the symbol table does
 not work correctly according to the assignment 4 instructions.
-Instead, the -s option creates the symbol table and outputs my own
-version of textual output that I've implemented via a toString() 
+Instead, the -t option creates the symbol table and outputs my own
+version of textual output that I've implemented via a returnST()
 method inside Parser.java. This is all for my own testing purposes 
 to verify that the functionality of the syntax table is correct.
 
-The abstract syntax tree created in this assignment (5) does not
-yet function properly. The starting bits and pieces such as the
-the various node classes are there, but I have not finished
-implementing them inside Parser.java yet. Using the -a option will
-simply output "Creating abstract syntax tree" to stdout.
+The abstract syntax tree is fully functional now, however the
+graphical/textual output has not been fully implemented. Currently
+the AST's functionality is verified through a "simpler" version
+of the textual output required by the assignment. At a glance, this
+simpler output should be able to verify that all the instructions
+are properly built inside the AST.
+
+The interpreter is not fully functional currently.
+
+The driver is currently able to fully handle the code generator.
+However, the code generator itself is not working. 
+If no command line options are given, the code generator will:
+1) Run and take input from stdin
+2) Output the generated code to stdout.
+If a filename is given:
+1) the code generator will run and take input from the file
+2) output the generated code to another file with the same basename 
+   as the input filename, but with a ".s" extension
+   (as described in the assignment directions).
