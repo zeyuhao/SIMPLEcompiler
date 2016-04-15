@@ -40,6 +40,8 @@ public class AST {
       curr = this.nextNode(curr);
       tree += curr.toString() + "\n";
     }
+    int index = tree.lastIndexOf("\n");
+    tree = tree.substring(0, index);
     return tree;
   }
 }

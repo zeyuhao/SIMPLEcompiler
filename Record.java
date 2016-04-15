@@ -5,9 +5,8 @@ zhao7@jhu.edu
 
 public class Record extends Type {
   private Scope fields;
-  public Record(Scope fields, Type type) {
+  public Record(Scope fields) {
     this.fields = fields; // fields of the record, of type variable
-    this.type = type; // Type of the field
   }
 
   public boolean isRecord() {

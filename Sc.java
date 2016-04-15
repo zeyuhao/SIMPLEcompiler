@@ -217,7 +217,9 @@ public class Sc {
         if (graphical) {
           throw new Exception(error_graphical);
         }
-        System.out.println("Running the interpreter");
+        parser = new Parser(token_list, obs);
+        parser.parse();
+        System.out.println(parser.returnEnv());
       } else if (gen_code) {
         if (graphical) {
           throw new Exception(error_graphical);

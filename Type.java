@@ -25,8 +25,8 @@ public class Type extends Entry {
     return "type";
   }
 
-  // Check if this type matches
-  // that of another Node's
+  // Deeply check if this Type matches
+  // another Type.
   public boolean matchType(Type type) {
     if (this.isInteger()) {
       return type.isInteger();
@@ -38,12 +38,7 @@ public class Type extends Entry {
         return this_elem_type.matchType(other_elem_type);
       }
     } else if (this.isRecord()) {
-      if (type.isRecord()) {
-        Type this_rec_type = this.getType();
-        Type other_rec_type = type.getType();
-        // recursively check that types match
-        return this_rec_type.matchType(other_rec_type);
-      }
+      return type.isRecord();
     }
     return false;
   }

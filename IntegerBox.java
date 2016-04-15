@@ -5,9 +5,8 @@ zhao7@jhu.edu
 
 public class IntegerBox extends Box {
   private int value;
-  
-  public IntegerBox(String name, int value) {
-    this.name = name;
+
+  public IntegerBox() {
     this.value = 0;
   }
 
@@ -17,5 +16,13 @@ public class IntegerBox extends Box {
 
   public int getVal() {
     return this.value;
+  }
+
+  public boolean isInteger() {
+    return true;
+  }
+
+  public String toString() {
+    return "Integer: " + this.value;
   }
 }

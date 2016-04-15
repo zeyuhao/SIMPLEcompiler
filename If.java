@@ -27,6 +27,8 @@ public class If extends Instruction {
     if (this.instr_false != null) {
       str += "false =>\n  " + this.instr_false.toString();
     }
+    int index = str.lastIndexOf("\n");
+    str = str.substring(0, index);
     return str;
   }
 }

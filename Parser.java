@@ -56,6 +56,7 @@ public class Parser {
   private Scope curr_scope; // current Scope
   private Type INTEGER; // single instance of Integer class
   private AST ast; // instance of Abstract Syntax Tree
+  private Environment env; // instance of the Environment
 
 
   // Pass in the full list of tokens from Scanner
@@ -69,6 +70,7 @@ public class Parser {
     this.curr_scope = this.program; // set current Scope to program Scope
     this.INTEGER = new Integer();
     this.universe.insert("INTEGER", this.INTEGER); // Insert Integer class
+    this.env = new Environment();
   }
 
   private void next_token() {
@@ -613,7 +615,7 @@ public class Parser {
   // "RECORD" {IdentifierList ":" Type ";"} "END"
   private Type record() throws Exception {
     this.match(this.RECORD);
-    // set Record's outer Scope to the current Scope
+    // set Record's parent Scope to the current Scope
     Scope rec_scope = new Scope(this.curr_scope);
     // Set the current Scope to the new Scope
     this.curr_scope = rec_scope;
@@ -626,7 +628,7 @@ public class Parser {
       this.record_insert(id_list, curr_type);
     }
     this.match(this.END);
-    Record rec = new Record(rec_scope, curr_type);
+    Record rec = new Record(rec_scope);
     this.curr_scope = rec_scope.getParent();
     rec_scope.setParent(null);
     return rec;
@@ -954,14 +956,35 @@ public class Parser {
   }
 
   public void parse() throws Exception {
+    // Create the concrete syntax tree, symbol table, abstract syntax tree
     this.program();
   }
 
-  public String returnST() {
-    return this.curr_scope.toString();
+  public String returnEnv() {
+    // Create the environment
+    this.curr_scope.createEnvironment(this.env);
+    return this.env.toString();
   }
-  
+
+  public String returnST() {
+    String str = this.curr_scope.toString();
+    if (str == null | str.equals("")) {
+      return "";
+    } else {
+      return str;
+    }
+  }
+
   public String returnAST() {
-    return this.ast.toString();
+    if (this.ast == null) {
+      return "";
+    }
+    String str = this.ast.toString();
+    if (str == null | str.equals("")) {
+      System.out.println("empty");
+      return "";
+    } else {
+      return str;
+    }
   }
 }

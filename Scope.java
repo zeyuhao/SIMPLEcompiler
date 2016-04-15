@@ -3,11 +3,11 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 public class Scope {
-
-  private Map<String, Entry> symbol_table;
+  private HashMap<String, Entry> symbol_table;
   private Scope parent;
 
   // default constructor
@@ -56,12 +56,40 @@ public class Scope {
     this.parent = parent;
   }
 
+  public void createEnvironment(Environment env) {
+    for (HashMap.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
+      String key = entry.getKey();  // name of the Entry
+      Entry value = entry.getValue(); // the actual Entry
+      Box box = null;
+      // Only keep track of variables in the Environment
+      if (value.isVariable()) {
+        Type type = value.getType(); // the Entry Type
+        if (type.isInteger()) {
+          box = new IntegerBox();
+        } else if (type.isArray()) {
+          box = new ArrayBox(type);
+        } else if (type.isRecord()) {
+          box = new RecordBox(type);
+        }
+        env.insertBox(key, box);
+      }
+    }
+  }
+
+  public HashMap<String, Entry> getTable() {
+    return this.symbol_table;
+  }
+
   public String toString() {
     String str = "";
-    for (Map.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
+    for (HashMap.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
       String key = entry.getKey();
       Entry value = entry.getValue();
       str += key + " - " + value.toString() + "\n";
+    }
+    int index = str.lastIndexOf("\n");
+    if (index != -1) {
+      str = str.substring(0, index);
     }
     return str;
   }

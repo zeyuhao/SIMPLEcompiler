@@ -44,7 +44,7 @@ public class Expression extends Node {
   public String toString() {
     String str = "";
     if (this.number != null) {
-      str += this.token.returnVal();
+      str += this.number.returnVal();
     } else if (this.loc != null) {
       str = this.loc.toString();
     }
