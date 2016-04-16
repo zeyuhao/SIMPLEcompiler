@@ -35,8 +35,8 @@ public class ArrayBox extends Box {
   }
 
   // Set an element of the ArrayBox to another Box
-  public void setBox(int index, Box box) {
-    this.array[index] = box;
+  public void setBox(int index, Box other) {
+    this.array[index] = other;
   }
 
   public int getSize() {

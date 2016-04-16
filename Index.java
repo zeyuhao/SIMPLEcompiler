@@ -18,10 +18,20 @@ public class Index extends Location {
       throw new Exception("Expression in Index must be an Integer, found " +
         this.exp.toString() + " of Type " + this.exp.getType().returnType());
     }
+    loc.setParent(this);
+    exp.setParent(this);
   }
 
   public boolean isIndex() {
     return true;
+  }
+
+  public Location getLoc() {
+    return this.loc;
+  }
+
+  public Expression getExp() {
+    return this.exp;
   }
 
   public String toString() {

@@ -33,7 +33,7 @@ public class RecordBox extends Box {
     }
   }
 
-  public void insertBox(String name, Box box) {
+  private void insertBox(String name, Box box) {
     this.record.put(name, box);
   }
 
@@ -42,6 +42,11 @@ public class RecordBox extends Box {
       return this.record.get(name);
     }
     return null;
+  }
+
+  public void setBox(String name, Box other) throws Exception {
+    Box box = this.getBox(name);
+    box = other;
   }
 
   public HashMap<String, Box> getRecord() {

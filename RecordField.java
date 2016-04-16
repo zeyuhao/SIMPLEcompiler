@@ -5,15 +5,20 @@ zhao7@jhu.edu
 
 public class RecordField extends Location {
   private Location loc;
-  private Variable field;
+  private Field field;
 
-  public RecordField(Location loc, Variable field, Token token)
+  public RecordField(Location loc, Field field, Token token)
     throws Exception {
     super();
     this.loc = loc;
     this.field = field;
     this.token = token;
     this.type = field.getType();
+    loc.setParent(this);
+  }
+
+  public Location getLoc() {
+    return this.loc;
   }
 
   public boolean isRecordField() {

@@ -10,7 +10,7 @@ public class IntegerBox extends Box {
     this.value = 0;
   }
 
-  public void setVal(int value) {
+  public void setBox(int value) {
     this.value = value;
   }
 

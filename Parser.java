@@ -483,9 +483,12 @@ public class Parser {
     Token begin = this.match("identifier");
     this.match(this.SEMICOLON);
     this.declarations();
+    // Create the environment from the Symbol Table
+    this.curr_scope.createEnvironment(this.env);
     if (this.match_opt(this.BEGIN)) {
       this.match(this.BEGIN);
       this.ast = this.instructions();
+      this.ast.interpret(this.env);
     }
     this.match(this.END);
     Token last = this.match("identifier");
@@ -841,7 +844,7 @@ public class Parser {
     this.notify("Write");
     this.match(this.WRITE);
     Expression exp = this.expression();
-    // Check that the Expression holds a an Integer Type
+    // Check that the Expression holds an Integer Type
     this.checkInteger(exp);
     this.notify_end();
     return new Write(exp);
@@ -961,8 +964,6 @@ public class Parser {
   }
 
   public String returnEnv() {
-    // Create the environment
-    this.curr_scope.createEnvironment(this.env);
     return this.env.toString();
   }
 
@@ -981,10 +982,13 @@ public class Parser {
     }
     String str = this.ast.toString();
     if (str == null | str.equals("")) {
-      System.out.println("empty");
       return "";
     } else {
       return str;
     }
+  }
+
+  private void print(String string) {
+    System.out.println(string);
   }
 }

@@ -21,6 +21,8 @@ public class Condition extends Node {
       "\nFound " + right.toString() + right.getToken().posString() +
       " of Type " + right.getType().returnType());
     }
+    left.setParent(this);
+    left.setParent(this);
   }
 
   public Expression getLeft() {

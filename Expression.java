@@ -23,6 +23,7 @@ public class Expression extends Node {
     this.loc = loc;
     this.type = loc.getType();
     this.token = loc.getToken();
+    loc.setParent(this);
   }
 
   public String nodeType() {

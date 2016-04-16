@@ -3,7 +3,7 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-public class AST {
+public class AST extends Node {
   private Instruction head;
   private Instruction current;
 
@@ -17,20 +17,20 @@ public class AST {
     this.current = next;
   }
 
-  public Instruction returnHead() {
-    return this.head;
-  }
-
-  public Instruction returnLast() {
-    return this.current;
-  }
-
   private Instruction nextNode(Instruction node) {
-    return node.next();
+    return node.getNext();
   }
 
   private boolean hasNext(Instruction node) {
-    return node.next() != null;
+    return node.getNext() != null;
+  }
+
+  public void interpret(Environment env) {
+    Instruction curr = this.head;
+    while(curr != null) {
+      curr.run(env);
+      curr = this.nextNode(curr);
+    }
   }
 
   public String toString() {

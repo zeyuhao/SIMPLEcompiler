@@ -8,6 +8,7 @@ public class Read extends Instruction {
 
   public Read(Location loc) {
     this.loc = loc;
+    loc.setParent(this);
   }
 
   public String toString() {

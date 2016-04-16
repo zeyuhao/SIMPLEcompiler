@@ -10,6 +10,8 @@ public class Repeat extends Instruction {
   public Repeat(Condition cond, AST instr) {
     this.cond = cond;
     this.instr = instr;
+    cond.setParent(this);
+    instr.setParent(this);
   }
 
   public String toString() {

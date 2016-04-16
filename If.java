@@ -13,6 +13,9 @@ public class If extends Instruction {
     this.cond = cond;
     this.instr_true = instr_true;
     this.instr_false = instr_false;
+    cond.setParent(this);
+    instr_true.setParent(this);
+    instr_false.setParent(this);
   }
 
   // If constructor with no ELSE Instruction

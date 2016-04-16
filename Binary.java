@@ -28,6 +28,8 @@ public class Binary extends Expression {
         " of Type " + exp_right.getType().returnType());
     }
     this.token = exp_left.getToken();
+    exp_left.setParent(this);
+    exp_right.setParent(this);
   }
 
   public boolean isConstant() {

@@ -8,6 +8,7 @@ public class Write extends Instruction {
 
   public Write(Expression exp) {
     this.exp = exp;
+    exp.setParent(this);
   }
 
   public String toString() {
