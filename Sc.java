@@ -219,7 +219,7 @@ public class Sc {
         }
         parser = new Parser(token_list, obs);
         parser.parse();
-        System.out.println(parser.returnEnv());
+        parser.returnEnv();
       } else if (gen_code) {
         if (graphical) {
           throw new Exception(error_graphical);

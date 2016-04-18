@@ -34,12 +34,21 @@ public class Expression extends Node {
     return true;
   }
 
+  // Checking that number != null ensures it's not a Variable
   public boolean isConstant() {
     return (this.number != null && this.type.isInteger());
   }
 
+  public boolean isBinary() {
+    return false;
+  }
+
   public Constant returnNumber() {
     return this.number;
+  }
+
+  public Location returnLoc() {
+    return this.loc;
   }
 
   public String toString() {

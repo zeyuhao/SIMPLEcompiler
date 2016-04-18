@@ -3,7 +3,7 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-public class Condition extends Node {
+public class Condition extends Instruction {
   private Expression left;
   private Expression right;
   private Token relation;
@@ -25,12 +25,34 @@ public class Condition extends Node {
     left.setParent(this);
   }
 
-  public Expression getLeft() {
-    return this.left;
+  public Token getRelation() {
+    return this.relation;
   }
 
-  public Expression getRight() {
-    return this.right;
+  public Condition copyCondition(Token relation) throws Exception {
+    return new Condition(relation, this.left, this.right);
+  }
+
+  // =, #, <, >, <=, or >=
+  public boolean isTrue(Environment env) throws Exception {
+    Box exp_left = this.getExpBox(this.left, env);
+    Box exp_right = this.getExpBox(this.right, env);
+    int val_left = exp_left.getVal();
+    int val_right = exp_right.getVal();
+    String op = this.relation.returnVal();
+    if (op.equals("=")) {
+      return val_left == val_right;
+    } else if (op.equals("#")) {
+      return val_left != val_right;
+    } else if (op.equals("<")) {
+      return val_left < val_right;
+    } else if (op.equals(">")) {
+      return val_left > val_right;
+    } else if (op.equals("<=")) {
+      return val_left <= val_right;
+    } else {
+      return val_left >= val_right;
+    }
   }
 
   public String toString() {

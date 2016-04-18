@@ -42,8 +42,13 @@ public class Token {
     return Integer.parseInt(this.val);
   }
 
-  public int[] returnPosition() {
+  public int[] returnPos() {
     return this.position;
+  }
+
+  public void setPos(int pos1, int pos2) {
+    this.position[0] = pos1;
+    this.position[1] = pos2;
   }
 
   public String posString() {

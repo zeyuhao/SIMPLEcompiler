@@ -32,6 +32,10 @@ public class Binary extends Expression {
     exp_right.setParent(this);
   }
 
+  public boolean isBinary() {
+    return true;
+  }
+
   public boolean isConstant() {
     return exp_left.isConstant() && exp_right.isConstant();
   }
@@ -79,6 +83,17 @@ public class Binary extends Expression {
       }
     }
     return null;
+  }
+
+  public Expression returnLeft() {
+    return this.exp_left;
+  }
+
+  public Expression returnRight() {
+    return this.exp_right;
+  }
+  public Token returnOp() {
+    return this.operator;
   }
 
   public String toString() {

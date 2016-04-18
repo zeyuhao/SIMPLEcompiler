@@ -145,11 +145,10 @@ public class Parser {
 
   private void unmatchedProgramNameException(Token begin, Token last)
     throws Exception {
-    int start = this.curr_token.returnPosition()[0];
-    int end = this.curr_token.returnPosition()[1];
     throw new Exception("identifier after PROGRAM and " +
       "identifier after final END must be identical. Expected " +
-      begin.returnVal() + " but found " + last.toString());
+      begin.returnVal() + begin.posString() + " but found " +
+      last.toString() + last.posString());
   }
 
   private void identifierExistsException(Token token) throws Exception {
@@ -472,6 +471,30 @@ public class Parser {
     }
   }
 
+  // Function to get the converted Condition for Repeat instructions
+  // '=' -> '#'
+  // '#' -> '='
+  // '<' -> '>='
+  // '>' -> '<='
+  // '<=' -> '>'
+  // '>=' -> '<'
+  private Condition convertCond(Condition cond) throws Exception {
+    String op = cond.getRelation().returnVal();
+    if (op.equals("=")) {
+      return cond.copyCondition(this.HASHTAG);
+    } else if (op.equals("#")) {
+      return cond.copyCondition(this.EQUAL);
+    } else if (op.equals("<")) {
+      return cond.copyCondition(this.GTEQ);
+    } else if (op.equals(">")) {
+      return cond.copyCondition(this.LTEQ);
+    } else if (op.equals("<=")) {
+      return cond.copyCondition(this.GT);
+    } else {
+      return cond.copyCondition(this.LT);
+    }
+  }
+
   /*
     Program = "PROGRAM" identifier ";" Declarations
       ["BEGIN" Instructions] "END" identifier "." .
@@ -488,7 +511,6 @@ public class Parser {
     if (this.match_opt(this.BEGIN)) {
       this.match(this.BEGIN);
       this.ast = this.instructions();
-      this.ast.interpret(this.env);
     }
     this.match(this.END);
     Token last = this.match("identifier");
@@ -604,9 +626,12 @@ public class Parser {
 
   // "ARRAY" Expression "OF" Type
   private Type array() throws Exception {
-    this.match(this.ARRAY);
+    Token token = this.match(this.ARRAY);
     Expression exp = this.expression();
     if (!this.checkPositiveConstant(exp)) {
+      int pos1 = token.returnPos()[0];
+      int pos2 = token.returnPos()[1];
+      exp.getToken().setPos(pos1, pos2);
       this.expressionNotPositiveConstantException(exp, exp.getToken());
     }
     this.match(this.OF);
@@ -804,9 +829,12 @@ public class Parser {
     AST instr = this.instructions();
     this.match(this.UNTIL);
     Condition cond = this.condition();
+    Condition conv_cond = this.convertCond(cond);
     this.match(this.END);
     this.notify_end();
-    return new Repeat(cond, instr);
+    Repeat repeat = new Repeat(cond, instr);
+    repeat.setConvCond(conv_cond);
+    return repeat;
   }
 
   // "WHILE" Condition "DO" Instructions "END" .
@@ -818,10 +846,11 @@ public class Parser {
     AST instr = this.instructions();
     this.match(this.END);
     this.notify_end();
-    // Set # as the operator for a new Condition for the Repeat
-    Condition repeat_cond = new Condition(
-      this.HASHTAG, cond.getLeft(), cond.getRight());
-    AST repeat = new AST(new Repeat(repeat_cond, instr));
+    // Set a new Condition for the Repeat with a converted operator
+    Condition repeat_cond = this.convertCond(cond);
+    Repeat rep = new Repeat(repeat_cond, instr);
+    rep.setConvCond(cond);
+    AST repeat = new AST(rep);
     // Nest the Repeat inside an If
     return new If(cond, repeat);
   }
@@ -963,8 +992,9 @@ public class Parser {
     this.program();
   }
 
-  public String returnEnv() {
-    return this.env.toString();
+  public void returnEnv() throws Exception {
+    this.ast.interpret(this.env);
+    //return this.env.toString();
   }
 
   public String returnST() {
@@ -988,6 +1018,7 @@ public class Parser {
     }
   }
 
+  // debug function
   private void print(String string) {
     System.out.println(string);
   }

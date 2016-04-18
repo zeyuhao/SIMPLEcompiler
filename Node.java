@@ -44,11 +44,4 @@ public class Node {
   public boolean isInstruction() {
     return false;
   }
-
-  // For testing
-  public String printParent() {
-    if (this.parent != null) {
-      return "Parent of " + this.toString() + " is " + this.parent.toString();
-    } else return this.toString() + "has no parent";
-  }
 }

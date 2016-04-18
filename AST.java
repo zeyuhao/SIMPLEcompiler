@@ -25,7 +25,8 @@ public class AST extends Node {
     return node.getNext() != null;
   }
 
-  public void interpret(Environment env) {
+  // Run each Instruction in the AST
+  public void interpret(Environment env) throws Exception {
     Instruction curr = this.head;
     while(curr != null) {
       curr.run(env);

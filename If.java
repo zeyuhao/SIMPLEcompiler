@@ -24,6 +24,14 @@ public class If extends Instruction {
     this.instr_true = instr_true;
   }
 
+  public void run(Environment env) throws Exception {
+    if (this.cond.isTrue(env)) {
+      this.instr_true.interpret(env);
+    } else if (this.instr_false != null) {
+      this.instr_false.interpret(env);
+    }
+  }
+
   public String toString() {
     String str = "If:\nCondition =>\n  " + this.cond.toString() +
       "True =>\n  " + this.instr_true.toString();
