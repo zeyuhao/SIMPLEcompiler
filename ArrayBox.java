@@ -47,16 +47,42 @@ public class ArrayBox extends Box {
     return this.array[index];
   }
 
+  public Type getType() {
+    return this.type;
+  }
+
   public boolean isArray() {
     return true;
   }
 
+  public void setArray(Box[] array) {
+    this.array = array;
+  }
+
+  public Box[] deepCopy() {
+    Box[] copy = new Box[this.getSize()];
+    for (int i = 0; i < this.getSize(); i++) {
+      Box box = this.getBox(i);
+      if (box.isInteger()) {
+        copy[i] = new IntegerBox(((IntegerBox)box).getVal());
+      } else if (box.isArray()) {
+        copy[i] = new ArrayBox(this.type);
+        ((ArrayBox)copy[i]).setArray(((ArrayBox)box).deepCopy());
+      } else if (box.isRecord()) {
+        copy[i] = new RecordBox(this.type.getType());
+        ((RecordBox)copy[i]).setRecord(((RecordBox)box).deepCopy());
+      }
+    }
+    return copy;
+  }
+
   // Deep copy of other ArrayBox for assigning ArrayBox to ArrayBox
   public void assign(ArrayBox other) {
-    this.array = new Box[other.getSize()];
+    this.array = other.deepCopy();
+    /*this.array = new Box[other.getSize()];
     for (int i = 0; i < other.getSize(); i++) {
       this.setBox(i, other.getBox(i));
-    }
+    }*/
   }
 
   public String toString() {

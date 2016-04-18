@@ -994,7 +994,7 @@ public class Parser {
 
   public void returnEnv() throws Exception {
     this.ast.interpret(this.env);
-    //return this.env.toString();
+    System.out.println(this.env.toString());
   }
 
   public String returnST() {
