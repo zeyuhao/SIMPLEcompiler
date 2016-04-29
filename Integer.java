@@ -13,6 +13,10 @@ public class Integer extends Type {
     return "Integer";
   }
 
+  public int getMemSpace() {
+    return 4;
+  }
+
   public String toString() {
     return "Integer";
   }

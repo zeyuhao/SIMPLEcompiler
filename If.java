@@ -32,6 +32,12 @@ public class If extends Instruction {
     }
   }
 
+  public String generateCode(Environment env, RegisterDescriptor reg)
+    throws Exception {
+    String str = "";
+    return str;
+  }
+
   public String toString() {
     String str = "If:\nCondition =>\n  " + this.cond.toString() +
       "True =>\n  " + this.instr_true.toString();

@@ -1,6 +1,6 @@
 Zeyu Hao
 zhao7@jhu.edu
-Assignment 7: Simple Code Generator
+Assignment 8: Decent Code Generator
 
 Makefile
 ===================================================================
@@ -17,7 +17,7 @@ The shell script 'sc' simply takes all command line arguments
 passed to it from bash and feeds it to my Java driver.
 
 Driver Usage:
-./sc [-s | -c | -t | -a | -i] [-g] [optional_filename]
+./sc [-s | -c | -t | -a | -i | -x] [-g] [optional_filename]
 
 If no command line arguments are given, the code generator will run.
 If no filename is given, the driver prompts for input from stdin.
@@ -26,6 +26,7 @@ If no filename is given, the driver prompts for input from stdin.
 -t runs the Symbol Table generator
 -a runs the Abstract Syntax Tree generator 
 -i runs the Interpreter
+-x runs the "improved" code generator
 -g adds graphical output to the compiler functions above
    (must be used with -c, -t, or -a)
 
@@ -52,10 +53,13 @@ of the textual output required by the assignment. At a glance, this
 simpler output should be able to verify that all the instructions
 are properly built inside the AST.
 
-The interpreter is not fully functional currently.
+The interpreter is fully functional now, and will correctly
+interpret any type of instruction.
 
+
+Code Generator Details
+==================================================================
 The driver is currently able to fully handle the code generator.
-However, the code generator itself is not working. 
 If no command line options are given, the code generator will:
 1) Run and take input from stdin
 2) Output the generated code to stdout.
@@ -64,3 +68,55 @@ If a filename is given:
 2) output the generated code to another file with the same basename 
    as the input filename, but with a ".s" extension
    (as described in the assignment directions).
+
+The code generator itself is getting close to, but not fully 
+finished. What it can currently do is dynamically generate code 
+for a small subset of instructions. Here is an example program that 
+my code generator can generate for:
+
+PROGRAM X;
+CONST
+  a = 3;
+  b = 4;
+VAR
+  k: ARRAY a OF INTEGER;
+  o:  ARRAY a OF ARRAY a OF ARRAY a OF RECORD y: INTEGER; END;
+  v: INTEGER;
+BEGIN
+  v := 1;
+  k[1] := v;
+  k[1] := v + 4;
+  k[1] := k[1] + a;
+  k[1] := k[1] - b;
+  WRITE k[1];
+  READ k[2];
+  READ k[1];
+  READ o[2][2][2].y;
+  WRITE k[1] + k[2];
+  WRITE o[2][2][2].y + 4
+END X.
+
+- It can't generate code for "if" or "repeat" instructions currently.
+- It can't check for immediate values that can't be represented within
+  a 12 bit limit (4 bit rotate + 8 bit value).
+- It can't generate code to check for array out of bounds at run-time
+  For example:
+    READ a;
+    v[a] = 4;
+  Where a could be an invalid index at runtime
+
+However, my code generator passes the following criteria in
+the assignment for parts A and B:
+From A -
+1.  Use registers for temporary values only, that is only within 
+    an instruction, not across instructions.
+2.  Part of this criteria is finished: Allocate and free registers 
+    in a stack-like fashion.
+    Currently, I made a register specifier class (register descriptor)
+    to inform the code generator of available registers.
+    
+From B -
+2.  For (cascades of) field selectors, all relevant offsets should be 
+    computed at compile-time etc.
+3.  For (cascades of) index selectors with constant expressions, all
+    relevant offsets should be computed at compile-time etc.

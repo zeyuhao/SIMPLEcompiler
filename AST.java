@@ -34,6 +34,18 @@ public class AST extends Node {
     }
   }
 
+  // Generate Code for each Instruction in the AST
+  public String generateCode(Environment env, RegisterDescriptor reg)
+    throws Exception {
+    String str = "";
+    Instruction curr = this.head;
+    while(curr != null) {
+      str += curr.generateCode(env, reg);
+      curr = this.nextNode(curr);
+    }
+    return str;
+  }
+
   public String toString() {
     String tree = this.head.toString() + "\n";
     Instruction curr = this.head;

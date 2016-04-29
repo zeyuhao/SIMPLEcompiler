@@ -12,7 +12,7 @@ public class Sc {
   static final String error_end = "compiler options provided";
   static final String error_opt = "compiler options must";
   static final String error_format = " follow [\"-\"" +
-    "(\"s\"|\"c\"|\"t\"|\"a\"|\"i\")] [\"-g\"] [filename]";
+    "(\"s\"|\"c\"|\"t\"|\"a\"|\"i\"|\"x\")] [\"-g\"] [filename]";
   static final String error_graphical = "-g can only be supplied " +
     "with -c, -t, or -a";
   static final String error_file = "Could not output generated code to ";
@@ -114,13 +114,13 @@ public class Sc {
 
   // If valid compiler option detected, return true, else return false
   static boolean checkFormat(String option) throws Exception {
-    // compiler option should be ["-" ("s"|"c"|"t"|"a"|"i")]
+    // compiler option should be ["-" ("s"|"c"|"t"|"a"|"i"|"x")]
     if (option.charAt(0) == '-') {
       comp_opt = option.charAt(1);
       // Option should be -s, -c, -t, -a, -i
       if (comp_opt != 's' && comp_opt != 'c' && comp_opt != 't'
-        && comp_opt != 'a' && comp_opt != 'i') {
-        throw new Exception(error_opt + " be -s, -c, -t, -a, or -i");
+        && comp_opt != 'a' && comp_opt != 'i' && comp_opt != 'x') {
+        throw new Exception(error_opt + " be -s, -c, -t, -a, -i, or -x");
       }
       return true;
     }
@@ -194,6 +194,8 @@ public class Sc {
       // Begin compiling operations
       sc = new Scanner(source);
       token_list = sc.all();
+      parser = new Parser(token_list, obs);
+
       if (comp_opt == 's') {
         if (graphical) {
           throw new Exception(error_graphical);
@@ -206,32 +208,55 @@ public class Sc {
         parser.parse();
         System.out.println(obs.toString());
       } else if (comp_opt == 't') {
-        parser = new Parser(token_list, obs);
         parser.parse();
-        System.out.println(parser.returnST());
+        Scope symbol_table = parser.returnST();
+        String str = symbol_table.toString();
+        if (str != null && !str.equals("")) {
+          System.out.println(str);
+        }
       } else if (comp_opt == 'a') {
-        parser = new Parser(token_list, obs);
         parser.parse();
-        System.out.println(parser.returnAST());
+        AST ast = parser.returnAST();
+        if (ast != null) {
+          String str = ast.toString();
+          if (str != null && !str.equals("")) {
+            System.out.println(str);
+          }
+        }
       } else if (comp_opt == 'i') {
         if (graphical) {
           throw new Exception(error_graphical);
         }
-        parser = new Parser(token_list, obs);
         parser.parse();
-        parser.returnEnv();
+        Environment env = parser.returnEnv();
+        /*if (env != null) {
+          System.out.println(env.toString());
+        }*/
+      } else if (comp_opt == 'x') {
+        if (graphical) {
+          throw new Exception(error_graphical);
+        }
+        parser.parse();
+        String code = parser.generateCode();
+        if (!input_file.isEmpty()) {
+          String output_file = addExtention(stripExtension(input_file), "s");
+          createFile(output_file);
+          writeFile(output_file, code);
+        } else {
+          System.out.println(code);
+        }
       } else if (gen_code) {
         if (graphical) {
           throw new Exception(error_graphical);
         }
-        parser = new Parser(token_list, obs);
         parser.parse();
+        String code = parser.generateCode();
         if (!input_file.isEmpty()) {
           String output_file = addExtention(stripExtension(input_file), "s");
           createFile(output_file);
-          writeFile(output_file, "Generating code");
+          writeFile(output_file, code);
         } else {
-          System.out.println("Generating code");
+          System.out.println(code);
         }
       }
     } catch (Exception e) {

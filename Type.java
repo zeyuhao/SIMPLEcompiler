@@ -25,6 +25,10 @@ public class Type extends Entry {
     return "type";
   }
 
+  public int getMemSpace() {
+    return 0;
+  }
+
   // Deeply check if this Type matches
   // another Type.
   public boolean matchType(Type type) {

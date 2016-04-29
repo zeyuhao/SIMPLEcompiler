@@ -10,6 +10,7 @@ public class Field extends Variable {
   }
 
   public String toString() {
-    return "Field of Type: " + this.type.toString();
+    return "Field with size " + this.data_size + " of Type: " +
+      this.type.toString();
   }
 }

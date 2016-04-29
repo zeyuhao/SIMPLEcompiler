@@ -20,6 +20,30 @@ public class Read extends Instruction {
     ((IntegerBox)box).setBox(value);
   }
 
+  public String generateCode(Environment env, RegisterDescriptor reg)
+    throws Exception {
+    String str = "";
+    String reg_0 = reg.available();
+    reg.setInUse();
+    str += "\tldr " + reg_0 + ", =rformat\n";
+    Location base = this.getBase(this.loc);
+    String name = base.toString();
+    int addr = this.getEnvBox(base, env).getAddress();
+    String reg_1 = reg.available();
+    reg.setInUse();
+    String reg_2 = reg.available();
+    reg.setInUse();
+    String reg_3 = reg.available();
+    reg.setInUse();
+    str += "\tldr " + reg_2 + ", addr_" + name + "\n";
+    str += "\tmov " + reg_3 + ", #" + addr + "\n";
+    str += "\tadd " + reg_2 + ", " + reg_2 + ", " + reg_3 + "\n";
+    str += "\tmov " + reg_1 + ", " + reg_2 + "\n";
+    str += "\tbl scanf\n\n";
+    reg.reset();
+    return str;
+  }
+
   private int read_int() throws Exception {
     String input = "";
     BufferedReader in = null;

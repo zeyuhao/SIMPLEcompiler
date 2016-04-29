@@ -14,7 +14,7 @@ public class Scanner {
   private static final String[] keywords =
     {"IF", "ELSE", "WHILE", "PROGRAM", "BEGIN", "END", "CONST", "TYPE",
      "VAR", "ARRAY", "OF", "RECORD", "DIV", "MOD", "THEN", "REPEAT",
-     "UNTIL", "DO", "WRITE", "READ"};
+     "UNTIL", "DO", "WRITE", "READ", "PROCEDURE", "RETURN"};
   private static final char[] operator = ".;:=+-*()#<>[],".toCharArray();
   private static final char[] ignored = {' ', '\t', '\n', '\f', '\r'};
 

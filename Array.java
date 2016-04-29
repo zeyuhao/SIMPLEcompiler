@@ -26,6 +26,10 @@ public class Array extends Type {
     return this.length.returnVal();
   }
 
+  public int getMemSpace() {
+    return this.length() * this.elemType().getMemSpace();
+  }
+
   public String toString() {
     return "Array " + this.length.returnVal() + " of " + this.type.toString();
   }

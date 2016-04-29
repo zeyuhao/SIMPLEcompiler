@@ -15,6 +15,8 @@ public class Parser {
   private static final Token CONST = new Token("keyword", "CONST", 0, 0);
   private static final Token TYPE = new Token("keyword", "TYPE", 0, 0);
   private static final Token VAR = new Token("keyword", "VAR", 0, 0);
+  private static final Token PROC = new Token("keyword", "PROCEDURE", 0, 0);
+  private static final Token RETURN = new Token("keyword", "RETURN", 0, 0);
   private static final Token ARRAY = new Token("keyword", "ARRAY", 0, 0);
   private static final Token OF = new Token("keyword", "OF", 0, 0);
   private static final Token RECORD = new Token("keyword", "RECORD", 0, 0);
@@ -57,6 +59,7 @@ public class Parser {
   private Type INTEGER; // single instance of Integer class
   private AST ast; // instance of Abstract Syntax Tree
   private Environment env; // instance of the Environment
+  private Generator gen;
 
 
   // Pass in the full list of tokens from Scanner
@@ -147,8 +150,14 @@ public class Parser {
     throws Exception {
     throw new Exception("identifier after PROGRAM and " +
       "identifier after final END must be identical. Expected " +
-      begin.returnVal() + begin.posString() + " but found " +
-      last.toString() + last.posString());
+      begin.toString() + " but found " + last.toString());
+  }
+
+  private void unmatchedProcNameException(Token begin, Token last)
+    throws Exception {
+    throw new Exception("identifier after PROCEDURE and " +
+      "identifier after END must be identical. Expected " +
+      begin.toString() + " but found " + last.toString());
   }
 
   private void identifierExistsException(Token token) throws Exception {
@@ -169,6 +178,11 @@ public class Parser {
 
   private void identifierNotVarException(Token token) throws Exception {
     throw new Exception(token.toString() + " is not a Variable");
+  }
+
+  // Defensive programming - should never reach this exception
+  private void identifierNotProcException(Token token) throws Exception {
+    throw new Exception(token.toString() + " is not a Procedure");
   }
 
   private void identifierNotArrayException(Location loc, Token token)
@@ -225,6 +239,27 @@ public class Parser {
       "\nbut found Expression " + right.toString() +
       right.getToken().posString() + " of Type: " +
       right.getType().toString());
+  }
+
+  private void procedureTypeException(Type type) throws Exception {
+    throw new Exception("Return Type of a Procedure must be Integer. " +
+      "Instead, found: " + type.toString());
+  }
+
+  private void procedureExpressionTypeException(Type type) throws Exception {
+    throw new Exception("Return Type of Expression inside Procedure must " +
+      "be Integer. Instead, found: " + type.toString());
+  }
+
+  private void unnamedTypeException(Token token) throws Exception {
+    throw new Exception("Parameter Type inside Procedure must " +
+      "be a previously declared Type.\nFound " +
+      token.returnVal() + token.posString());
+  }
+
+  private void returnInProcedureException(Token token) throws Exception {
+    throw new Exception("Return Expression found inside non-functional " +
+      "Procedure: " + token.returnVal() + token.posString());
   }
 
   // Initializes the Observer
@@ -284,6 +319,19 @@ public class Parser {
         this.identifierExistsException(token);
       }
       this.curr_scope.insert(name, new Field(type));
+    }
+  }
+
+  // record insertion with IdentifierList
+  private void formal_insert(ArrayList<Token> list, Type type)
+    throws Exception {
+    for (Token token : list) {
+      String name = token.returnVal();
+      // check if another entry with same name was already declared
+      if (this.curr_scope.local(name)) {
+        this.identifierExistsException(token);
+      }
+      this.curr_scope.insert(name, new FormalVariable(type));
     }
   }
 
@@ -439,6 +487,28 @@ public class Parser {
     return entry.isVariable();
   }
 
+  /**
+   * Return the a Procedure associated with a given identifier name.
+   * If identifier is not a Procedure, throw exception.
+   * @return entry the found Variable
+   */
+  private Procedure getProcedure(Token token) throws Exception {
+    if (!this.isProcedure(token)) {
+      this.identifierNotProcException(token);
+    }
+    return (Procedure) this.find_entry(token);
+  }
+
+  /**
+   * Check if Identifier is a Procedure.
+   * If identifier has not been declared already, throw exception
+   * @return true if Type, else false
+   */
+  private boolean isProcedure(Token token) throws Exception {
+    Entry entry = this.find_entry(token);
+    return entry.isProcedure();
+  }
+
   private void checkArray(Location loc) throws Exception {
     if (!loc.getType().isArray()) {
       this.identifierNotArrayException(loc, loc.getToken());
@@ -536,6 +606,8 @@ public class Parser {
         this.typeDecl();
       } else if (this.match_opt(this.VAR)) {
         this.varDecl();
+      } else if (this.match_opt(this.PROC)) {
+        this.procDecl();
       } else {
         break;
       }
@@ -601,6 +673,113 @@ public class Parser {
     this.notify_end();
   }
 
+  /*  ProcDecl = "PROCEDURE" identifier "(" [Formals] ")" [":" Type] ";"
+        { VarDecl } [ "BEGIN" Instructions ] [ "RETURN" Expression ]
+        "END" identifier ";" .
+  */
+  private void procDecl() throws Exception {
+    this.notify("ProcDecl");
+    Scope proc_scope = new Scope(this.curr_scope);
+    // Set the current Scope to the new Scope
+    this.curr_scope = proc_scope;
+    Type curr_type = null;
+    AST instructions = null;
+    Expression exp = null;
+    this.match(this.PROC);
+    Token begin = this.match("identifier");
+    this.match(this.OPENPAR);
+    if (this.curr_token.isIdentifier()) {
+      this.formals();
+    }
+    this.match(this.CLOSEPAR);
+    if (this.match_opt(this.COLON)) {
+      this.match(this.COLON);
+      curr_type = this.type();
+      // Return Type must be Integer
+      if (!curr_type.isInteger()) {
+        this.procedureTypeException(curr_type);
+      }
+    }
+    this.match(this.SEMICOLON);
+    if (this.match_opt(this.VAR)) {
+      this.varDecl();
+    }
+    if (this.match_opt(this.BEGIN)) {
+      this.match(this.BEGIN);
+      instructions = this.instructions();
+    }
+    if (this.match_opt(this.RETURN)) {
+      this.match(this.RETURN);
+      exp = this.expression();
+      // Expression must also be Integer
+      if (!exp.getType().isInteger()) {
+        this.procedureExpressionTypeException(exp.getType());
+      }
+    }
+    this.match(this.END);
+    Token last = this.match("identifier");
+    if (!begin.returnVal().equals(last.returnVal())) {
+      this.unmatchedProcNameException(begin, last);
+    }
+    this.match(this.SEMICOLON);
+    Procedure proc = new Procedure(proc_scope, curr_type, instructions, exp);
+    this.curr_scope = proc_scope.getParent();
+    proc_scope.setParent(null);
+    this.table_insert(begin, proc);
+    this.notify_end();
+  }
+
+  // Formals = Formal { ";" Formal } .
+  private void formals() throws Exception {
+    this.notify("Formals");
+    this.formal();
+    while (this.match_opt(this.SEMICOLON)) {
+      this.match(this.SEMICOLON);
+      this.formal();
+    }
+    this.notify_end();
+  }
+
+  // Formal = IdentifierList ":" Type .
+  private void formal() throws Exception {
+    this.notify("Formal");
+    ArrayList<Token> id_list = this.identifierList();
+    this.match(this.COLON);
+    try {
+      this.isType(this.curr_token);
+    } catch (Exception e) {
+      this.unnamedTypeException(this.curr_token);
+    }
+    Type curr_type = this.type();
+    this.formal_insert(id_list, curr_type);
+    this.notify_end();
+  }
+
+  // Call = identifier "(" [Actuals] ")" .
+  private Expression functionCall() throws Exception {
+    this.notify("Call");
+    // TODO: Fix this
+    Expression exp = new Expression(new Constant(this.INTEGER, 0),
+      new Token("integer", "0", 0, 0));
+    ArrayList<Expression> exp_list = null;
+    this.match("identifier");
+    this.match(this.OPENPAR);
+    // Optional ExpressionList
+    try {
+      exp_list = this.actuals();
+    } catch (Exception e) {}
+    this.match(this.CLOSEPAR);
+    this.notify_end();
+    return exp;
+  }
+
+  private ArrayList<Expression> actuals() throws Exception {
+    this.notify("Actuals");
+    ArrayList<Expression> exp_list = this.expressionList();
+    this.notify_end();
+    return exp_list;
+  }
+
   /*
     identifier | "ARRAY" Expression "OF" Type |
       "RECORD" {IdentifierList ":" Type ";"} "END" .
@@ -647,11 +826,10 @@ public class Parser {
     Scope rec_scope = new Scope(this.curr_scope);
     // Set the current Scope to the new Scope
     this.curr_scope = rec_scope;
-    Type curr_type = null;
     while (this.curr_token.isIdentifier()) {
       ArrayList<Token> id_list = this.identifierList();
       this.match(this.COLON);
-      curr_type = this.type();
+      Type curr_type = this.type();
       this.match(this.SEMICOLON);
       this.record_insert(id_list, curr_type);
     }
@@ -726,14 +904,19 @@ public class Parser {
       exp = new Expression(new Constant(
         this.INTEGER, token.returnIntVal()), token);
     } else if (this.curr_token.isIdentifier()) {
-      Token token = this.curr_token;
-      // Either we have a Number or Location from a Variable
-      Node node = this.designator();
-      if (node.isLocation()) {
-        exp = new Expression((Location) node);
-      } else if (node.isExpression()) {
-        exp = (Expression) node;
+      if (this.isProcedure(this.curr_token)) {
+        exp = this.functionCall();
+      } else {
+        // Either we have a Number or Location from a Variable
+        Node node = this.designator();
+        if (node.isLocation()) {
+          exp = new Expression((Location) node);
+        } else if (node.isExpression()) {
+          exp = (Expression) node;
+        }
       }
+    } else if (this.match_opt(this.OPENPAR)) {
+      exp = this.factor_expression();
     } else if (this.match_opt(this.OPENPAR)) {
       exp = this.factor_expression();
     } else {
@@ -768,7 +951,11 @@ public class Parser {
     Instruction instr = null;
     this.notify("Instruction");
     if (this.curr_token.isIdentifier()) {
-      instr = this.assign();
+      if (this.isProcedure(this.curr_token)) {
+        instr = this.procedureCall();
+      } else {
+        instr = this.assign();
+      }
     } else if (this.match_opt(this.IF)) {
       instr = this.If();
     } else if (this.match_opt(this.REPEAT)) {
@@ -891,6 +1078,28 @@ public class Parser {
     return new Read(loc);
   }
 
+  private Instruction procedureCall() throws Exception {
+    this.notify("Call");
+    // TODO: Fix this
+    Instruction call = null;
+    ArrayList<Expression> exp_list = null;
+    Token token = this.match("identifier");
+    // Get Procedure Entry from S.T, else throw exception
+    Procedure proc = this.getProcedure(token);
+    if (proc.hasReturn()) {
+      this.returnInProcedureException(token);
+    }
+    this.match(this.OPENPAR);
+    // Optional ExpressionList
+    try {
+      exp_list = this.actuals();
+    } catch (Exception e) {}
+    this.match(this.CLOSEPAR);
+    this.notify_end();
+    call = new ProcedureCall(proc, exp_list, token);
+    return call;
+  }
+
   // identifier Selector .
   private Node designator() throws Exception {
     this.notify("Designator");
@@ -992,30 +1201,26 @@ public class Parser {
     this.program();
   }
 
-  public void returnEnv() throws Exception {
-    this.ast.interpret(this.env);
-    System.out.println(this.env.toString());
+  public Scope returnST() {
+    return this.curr_scope;
   }
 
-  public String returnST() {
-    String str = this.curr_scope.toString();
-    if (str == null | str.equals("")) {
-      return "";
+  public AST returnAST() {
+    return this.ast != null ? this.ast : null;
+  }
+
+  public Environment returnEnv() throws Exception {
+    if (this.ast != null) {
+      this.ast.interpret(this.env);
+      return this.env;
     } else {
-      return str;
+      return null;
     }
   }
 
-  public String returnAST() {
-    if (this.ast == null) {
-      return "";
-    }
-    String str = this.ast.toString();
-    if (str == null | str.equals("")) {
-      return "";
-    } else {
-      return str;
-    }
+  public String generateCode() throws Exception {
+    this.gen = new Generator(this.curr_scope, this.env, this.ast);
+    return this.gen.generateCode();
   }
 
   // debug function

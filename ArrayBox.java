@@ -10,10 +10,11 @@ public class ArrayBox extends Box {
   private Type type; // element Type
 
   // Create an ArrayBox based directly off of the S.T Array Entry
-  public ArrayBox(Type array) {
+  public ArrayBox(Type array, int address) {
     int size = ((Array)array).length();
     this.type = array.getType(); // store the element type
     this.array = new Box[size];
+    this.address = address;
     this.initialize();
   }
 
@@ -21,15 +22,18 @@ public class ArrayBox extends Box {
   private void initialize() {
     if (this.type.isInteger()) {
       for (int i = 0; i < this.getSize(); i++) {
-        this.setBox(i, new IntegerBox());
+        int curr_address = i * this.type.getMemSpace() + this.address;
+        this.setBox(i, new IntegerBox(curr_address));
       }
     } else if (this.type.isArray()) {
       for (int i = 0; i < this.getSize(); i++) {
-        this.setBox(i, new ArrayBox(this.type));
+        int curr_address = i * this.type.getMemSpace() + this.address;
+        this.setBox(i, new ArrayBox(this.type, curr_address));
       }
     } else if (this.type.isRecord()) {
       for (int i = 0; i < this.getSize(); i++) {
-        this.setBox(i, new RecordBox(this.type));
+        int curr_address = i * this.type.getMemSpace() + this.address;
+        this.setBox(i, new RecordBox(this.type, curr_address));
       }
     }
   }
@@ -64,12 +68,15 @@ public class ArrayBox extends Box {
     for (int i = 0; i < this.getSize(); i++) {
       Box box = this.getBox(i);
       if (box.isInteger()) {
-        copy[i] = new IntegerBox(((IntegerBox)box).getVal());
+        int value = ((IntegerBox)box).getVal();
+        copy[i] = new IntegerBox(box.getAddress());
+        ((IntegerBox)copy[i]).setBox(value);
       } else if (box.isArray()) {
-        copy[i] = new ArrayBox(this.type);
+        System.out.println(box.toString());
+        copy[i] = new ArrayBox(this.type, box.getAddress());
         ((ArrayBox)copy[i]).setArray(((ArrayBox)box).deepCopy());
       } else if (box.isRecord()) {
-        copy[i] = new RecordBox(this.type.getType());
+        copy[i] = new RecordBox(this.type.getType(), box.getAddress());
         ((RecordBox)copy[i]).setRecord(((RecordBox)box).deepCopy());
       }
     }

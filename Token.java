@@ -39,6 +39,14 @@ public class Token {
   }
 
   public int returnIntVal() {
+    try {
+      Integer.parseInt(this.val);
+    } catch (Exception e) {
+      System.err.println("Value of arithmetic Expression " +
+        this.toString() + " exceeds system restrictions:\n" +
+        "[-2,147,483,648, 2,147,483,647] (inclusive)");
+      System.exit(0);
+    }
     return Integer.parseInt(this.val);
   }
 

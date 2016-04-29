@@ -18,6 +18,10 @@ public class Entry {
     return false;
   }
 
+  public boolean isProcedure() {
+    return false;
+  }
+
   public Type getType() {
     return this.type;
   }

@@ -4,7 +4,6 @@ zhao7@jhu.edu
 */
 
 import java.util.HashMap;
-import java.util.ArrayList;
 
 public class Scope {
   private HashMap<String, Entry> symbol_table;
@@ -65,11 +64,11 @@ public class Scope {
       if (value.isVariable()) {
         Type type = value.getType(); // the Entry Type
         if (type.isInteger()) {
-          box = new IntegerBox();
+          box = new IntegerBox(0);
         } else if (type.isArray()) {
-          box = new ArrayBox(type);
+          box = new ArrayBox(type, 0);
         } else if (type.isRecord()) {
-          box = new RecordBox(type);
+          box = new RecordBox(type, 0);
         }
         env.insertBox(key, box);
       }

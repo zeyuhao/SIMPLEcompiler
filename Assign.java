@@ -29,6 +29,27 @@ public class Assign extends Instruction {
     }
   }
 
+  public String generateCode(Environment env, RegisterDescriptor reg)
+    throws Exception {
+    String str = "";
+    Location base = this.getBase(this.loc);
+    String name = base.toString();
+    int addr = this.getEnvBox(base, env).getAddress();
+    String loc_reg = reg.available();
+    reg.setInUse();
+    String val_reg = reg.available();
+    reg.setInUse();
+    str += "\tldr " + loc_reg + ", addr_" + name + "\n";
+    if (this.exp.isConstant()) {
+      str += this.moveConstant(this.exp, val_reg);
+    } else {
+      str += this.getExpCode(this.exp, env, reg, val_reg);
+    }
+    str += "\tstr " + val_reg + ", [" + loc_reg + ", +#" + addr + "]\n\n";
+    reg.reset();
+    return str;
+  }
+
   public String toString() {
     return "Assign:\n  Location =>\n    " + this.loc.toString() +
                   "\n  Expression =>\n    " + this.exp.toString() + "\n";

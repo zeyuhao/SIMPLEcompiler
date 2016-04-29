@@ -11,9 +11,10 @@ public class RecordBox extends Box {
   private Type type;
 
   // Create a RecordBox based directly off of the S.T Record Entry
-  public RecordBox(Type record) {
+  public RecordBox(Type record, int address) {
     this.type = record;
     this.record = new HashMap<String, Box>();
+    this.address = address;
     this.initialize(record);
   }
 
@@ -24,14 +25,15 @@ public class RecordBox extends Box {
       Entry field = entry.getValue();
       Type type = field.getType();
       if (type.isInteger()) {
-        this.insertBox(name, new IntegerBox());
+        this.insertBox(name, new IntegerBox(this.address));
       } else if (type.isArray()) {
         int size = ((Array)type).length();
         Type elem_type = type.getType();
-        this.insertBox(name, new ArrayBox(type));
+        this.insertBox(name, new ArrayBox(type, this.address));
       } else if (type.isRecord()) {
-        this.insertBox(name, new RecordBox(type));
+        this.insertBox(name, new RecordBox(type, this.address));
       }
+      this.address += ((Field)field).returnSize();
     }
   }
 
@@ -76,13 +78,17 @@ public class RecordBox extends Box {
     for (HashMap.Entry<String, Box> entry : this.record.entrySet()) {
       String key = entry.getKey();
       Box box = entry.getValue();
+      int curr_address = box.getAddress();
       if (box.isInteger()) {
-        copy.put(key, new IntegerBox(((IntegerBox)box).getVal()));
+        int value = ((IntegerBox)box).getVal();
+        IntegerBox temp = new IntegerBox(curr_address);
+        temp.setBox(value);
+        copy.put(key, temp);
       } else if (box.isArray()) {
-        copy.put(key, new ArrayBox(((ArrayBox)box).getType()));
+        copy.put(key, new ArrayBox(((ArrayBox)box).getType(), curr_address));
         ((ArrayBox)copy.get(key)).setArray(((ArrayBox)box).deepCopy());
       } else if (box.isRecord()) {
-        copy.put(key, new RecordBox(((ArrayBox)box).getType()));
+        copy.put(key, new RecordBox(((ArrayBox)box).getType(), curr_address));
         ((RecordBox)copy.get(key)).setRecord(((RecordBox)box).deepCopy());
       }
     }
