@@ -262,6 +262,11 @@ public class Parser {
       "Procedure: " + token.returnVal() + token.posString());
   }
 
+  private void noReturnInFunctionException(Token token) throws Exception {
+    throw new Exception("No return Expression found inside Function " +
+      token.returnVal() + token.posString());
+  }
+
   // Initializes the Observer
   private void notify_start() {
     this.obs.start();
@@ -759,16 +764,32 @@ public class Parser {
   private Expression functionCall() throws Exception {
     this.notify("Call");
     // TODO: Fix this
-    Expression exp = new Expression(new Constant(this.INTEGER, 0),
-      new Token("integer", "0", 0, 0));
+    ProcedureCall proc_call = null;
+    FunctionCall func_call = null;
+    Expression exp = null;
     ArrayList<Expression> exp_list = null;
-    this.match("identifier");
+    Token token = this.match("identifier");
+    Procedure proc = this.getProcedure(token);
+    if (!proc.hasReturn()) {
+      this.noReturnInFunctionException(token);
+    }
     this.match(this.OPENPAR);
     // Optional ExpressionList
     try {
       exp_list = this.actuals();
     } catch (Exception e) {}
     this.match(this.CLOSEPAR);
+    proc_call = new ProcedureCall(proc, exp_list, token);
+    func_call = new FunctionCall(proc_call, proc, this.env);
+    Box exp_box = func_call.returnExpBox();
+    if (exp_box.isInteger()) {
+      int value = exp_box.getVal();
+      exp = new Expression(new Constant(this.INTEGER, value),
+        new Token("integer", value + "", 0, 0));
+    } else {
+      // Should never get this exception
+      this.procedureExpressionTypeException(exp.getType());
+    }
     this.notify_end();
     return exp;
   }

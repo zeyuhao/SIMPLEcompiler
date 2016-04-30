@@ -26,7 +26,7 @@ public class ProcedureCall extends Instruction {
         token.toString());
     }
     for (int i = 0; i < formals.length; i++) {
-      if (!this.params[i].getType().matchType(formals[i].getType())) {
+      if (this.params[i].getType() != formals[i].getType()) {
         throw new Exception("Mismatched parameter Types in Procedure " +
           token.returnVal() + token.posString());
       }
@@ -46,12 +46,15 @@ public class ProcedureCall extends Instruction {
         } else {
           box = ((IntegerBox)env.getBox(params[i].getToken().returnVal())).deepCopy();
         }
-
       } else {
         box = env.getBox(params[i].getToken().returnVal());
       }
       this.env.insertBox(this.formal_names[i], box);
     }
+  }
+
+  public Environment getEnv() {
+    return this.env;
   }
 
   public void run(Environment env) throws Exception {
