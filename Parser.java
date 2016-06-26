@@ -1104,17 +1104,13 @@ public class Parser {
   }
 
   /**
-   * Return the Environment
-   * @return env
+   * Interpret and run each Instruction in the Abstract Symbol Tree.
    */
-  public Environment returnEnv() throws Exception {
+  public void interpret() throws Exception {
     if (this.ast != null) {
       this.ast.interpret(this.env);
       // Close the BufferedReader used for Read instructions
       this.env.close_reader();
-      return this.env;
-    } else {
-      return null;
     }
   }
 

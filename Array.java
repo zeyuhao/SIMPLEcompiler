@@ -27,7 +27,7 @@ public class Array extends Type {
   }
 
   public int getMemSpace() {
-    return this.length() * this.elemType().getMemSpace();
+    return this.length() * this.type.getMemSpace();
   }
 
   public void accept(Visitor visitor, String name) {
