@@ -3,9 +3,6 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-import java.io.*;
-import java.lang.Integer;
-
 public class Read extends Instruction {
   private Location loc;
 
@@ -14,9 +11,19 @@ public class Read extends Instruction {
     loc.setParent(this);
   }
 
+  public Location getLoc() {
+    return this.loc;
+  }
+
+  public String accept(Visitor visitor) {
+    return visitor.visit(this, "Read");
+  }
+
   public void run(Environment env) throws Exception {
-    Box box = this.getEnvBox(this.loc, env);
-    int value = this.read_int();
+    // Get the base leftmost Location Variable we are operating from
+    Location base = this.getBase(this.loc);
+    Box box = this.getEnvBox(base, env);
+    int value = env.read_int();
     ((IntegerBox)box).setBox(value);
   }
 
@@ -42,24 +49,6 @@ public class Read extends Instruction {
     str += "\tbl scanf\n\n";
     reg.reset();
     return str;
-  }
-
-  private int read_int() throws Exception {
-    String input = "";
-    BufferedReader in = null;
-    int value = 0;
-    char c;
-    try {
-      in = new BufferedReader(new InputStreamReader(System.in));
-      // reads until an EOF
-      input = in.readLine();
-    } finally {
-      // close the InputStream
-      if (in != null) {
-        in.close();
-      }
-    }
-    return Integer.parseInt(input);
   }
 
   public String toString() {

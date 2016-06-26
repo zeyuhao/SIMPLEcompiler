@@ -116,8 +116,6 @@ public class Instruction extends Node {
     if (exp.isBinary()) { // Binary was unfoldable
       Expression left = ((Binary)exp).returnLeft();
       Expression right = ((Binary)exp).returnRight();
-      System.out.println(left.toString());
-      System.out.println(right.toString());
       if (!left.isConstant()) {
         str += this.getExpCode(left, env, reg, reg_name);
       }
@@ -197,5 +195,9 @@ public class Instruction extends Node {
       str += "\tldr " + reg_name + ", [" + next_reg + ", +#" + addr + "]\n";
     }
     return str;
+  }
+
+  public String accept(Visitor visitor) {
+    return "";
   }
 }

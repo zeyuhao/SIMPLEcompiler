@@ -3,21 +3,23 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class Scope {
-  private HashMap<String, Entry> symbol_table;
+
+  private Map<String, Entry> symbol_table;
   private Scope parent;
 
   // default constructor
   public Scope(Scope parent) {
-    this.symbol_table = new HashMap<String, Entry>();
+    this.symbol_table = new TreeMap<String, Entry>();
     this.parent = parent;
   }
 
   // constructor for the universe scope
   public Scope() {
-    this.symbol_table = new HashMap<String, Entry>();
+    this.symbol_table = new TreeMap<String, Entry>();
     this.parent = null;
   }
 
@@ -55,8 +57,16 @@ public class Scope {
     this.parent = parent;
   }
 
+  public boolean isEmpty() {
+    return this.symbol_table.size() == 0;
+  }
+
+  public Map<String, Entry> getTable() {
+    return this.symbol_table;
+  }
+
   public void createEnvironment(Environment env) {
-    for (HashMap.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
+    for (Map.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
       String key = entry.getKey();  // name of the Entry
       Entry value = entry.getValue(); // the actual Entry
       Box box = null;
@@ -75,13 +85,9 @@ public class Scope {
     }
   }
 
-  public HashMap<String, Entry> getTable() {
-    return this.symbol_table;
-  }
-
   public String toString() {
     String str = "";
-    for (HashMap.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
+    for (Map.Entry<String, Entry> entry : this.symbol_table.entrySet()) {
       String key = entry.getKey();
       Entry value = entry.getValue();
       str += key + " - " + value.toString() + "\n";

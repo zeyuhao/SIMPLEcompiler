@@ -21,6 +21,10 @@ public class RecordField extends Location {
     return this.loc;
   }
 
+  public Field getField() {
+    return this.field;
+  }
+
   public boolean isRecordField() {
     return true;
   }

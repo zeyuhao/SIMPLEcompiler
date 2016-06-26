@@ -15,7 +15,6 @@ public class Parser {
   private static final Token CONST = new Token("keyword", "CONST", 0, 0);
   private static final Token TYPE = new Token("keyword", "TYPE", 0, 0);
   private static final Token VAR = new Token("keyword", "VAR", 0, 0);
-  private static final Token PROC = new Token("keyword", "PROCEDURE", 0, 0);
   private static final Token RETURN = new Token("keyword", "RETURN", 0, 0);
   private static final Token ARRAY = new Token("keyword", "ARRAY", 0, 0);
   private static final Token OF = new Token("keyword", "OF", 0, 0);
@@ -51,6 +50,7 @@ public class Parser {
 
   private ArrayList<Token> tokens; // list of tokens we are parsing
   private Observer obs; // Observer to attach to this Parser
+  private Visitor visitor; // Visitor to attach this Parser
   private int position; // current position in token list
   private Token curr_token; // current token we are parsing
   private Scope universe; // universe Scope
@@ -59,23 +59,31 @@ public class Parser {
   private Type INTEGER; // single instance of Integer class
   private AST ast; // instance of Abstract Syntax Tree
   private Environment env; // instance of the Environment
-  private Generator gen;
+  private Generator gen; // instance of the code Generator
 
-
-  // Pass in the full list of tokens from Scanner
-  public Parser(ArrayList<Token> tokens, Observer obs) {
+  /**
+   * Constructor for the Parser
+   * @param tokens all Tokens processed by the Scanner
+   * @param obs the Observer that will be attached (graphical or textual)
+   * @param visitor the Observer that will be attached (graphical or textual)
+   */
+  public Parser(ArrayList<Token> tokens, Observer obs, Visitor visitor) {
     this.tokens = tokens;
     this.obs = obs;
+    this.visitor = visitor;
     this.position = 0;
     this.curr_token = this.tokens.get(this.position); // set to first token
     this.universe = new Scope();
     this.program = new Scope(this.universe); // set universe as parent Scope
     this.curr_scope = this.program; // set current Scope to program Scope
-    this.INTEGER = new Integer();
+    this.INTEGER = new Integer(); // instance of the Integer Class
     this.universe.insert("INTEGER", this.INTEGER); // Insert Integer class
     this.env = new Environment();
   }
 
+  /**
+   * Advance to the next Token in code
+   */
   private void next_token() {
     // If eof token not found, then get next token,
     // else we stay at current token
@@ -85,6 +93,13 @@ public class Parser {
     }
   }
 
+  /**
+   * Match the current token in source code to the specified Token, notify
+   * the observer, and advance to the next Token. If current Token doesn't
+   * match the specified Token, throw an exception.
+   * @param token the Token to match against
+   * @return tok the matched Token
+   */
   private Token match(Token token) throws Exception {
     Token tok = null;
     if (this.match_opt(token)) {
@@ -97,6 +112,13 @@ public class Parser {
     return tok;
   }
 
+  /**
+   * Match the current Token's type to the specified Token type, notify
+   * the observer, and advance to the next Token. If current Token's type
+   * doesn't match the specified Token's type, throw an exception.
+   * @param token_type a String denoting the specified Token's type
+   * @return tok the matched Token
+   */
   private Token match(String token_type) throws Exception {
     switch(token_type) {
       case "identifier":
@@ -122,6 +144,12 @@ public class Parser {
     return tok;
   }
 
+  /**
+   * Optionally match the current Token in source code against a specified list
+   * of Token(s).
+   * @param list the ArrayList of Tokens to optionally match against
+   * @return the matched Token else null
+   */
   private Token match(ArrayList<Token> list) throws Exception {
     for (Token token : list) {
       if (this.match_opt(token)) {
@@ -131,16 +159,29 @@ public class Parser {
     return null;
   }
 
+  /**
+   * Optionally match the current Token in source code against a specified
+   * Token.
+   * @param token the Token to optionally match against
+   * @return True if matched, else False
+   */
   private boolean match_opt(Token token) {
     return this.curr_token.returnType().equals(token.returnType()) &&
            this.curr_token.returnVal().equals(token.returnVal());
   }
 
+  /**
+   * Exception thrown if the current Token didn't match the specified Token
+   * @param token the String value of the specified Token
+   */
   private void tokenException(String token) throws Exception {
     throw new Exception("expected " + token + " but instead found " +
                         this.curr_token.toString());
   }
 
+  /**
+   * Exception thrown if a Production rule is found to be broken.
+   */
   private void productionException(String production) throws Exception {
     throw new Exception("expected " + production + " but instead found " +
                         this.curr_token.toString());
@@ -150,13 +191,6 @@ public class Parser {
     throws Exception {
     throw new Exception("identifier after PROGRAM and " +
       "identifier after final END must be identical. Expected " +
-      begin.toString() + " but found " + last.toString());
-  }
-
-  private void unmatchedProcNameException(Token begin, Token last)
-    throws Exception {
-    throw new Exception("identifier after PROCEDURE and " +
-      "identifier after END must be identical. Expected " +
       begin.toString() + " but found " + last.toString());
   }
 
@@ -178,11 +212,6 @@ public class Parser {
 
   private void identifierNotVarException(Token token) throws Exception {
     throw new Exception(token.toString() + " is not a Variable");
-  }
-
-  // Defensive programming - should never reach this exception
-  private void identifierNotProcException(Token token) throws Exception {
-    throw new Exception(token.toString() + " is not a Procedure");
   }
 
   private void identifierNotArrayException(Location loc, Token token)
@@ -234,64 +263,50 @@ public class Parser {
 
   private void unmatchedTypeException(Node left, Node right) throws Exception {
     throw new Exception("Mismatched Types in assignment:\n" +
-      "Location " + left.toString() + left.getToken().posString() +
-      " is of Type: " + left.getType().toString() +
-      "\nbut found Expression " + right.toString() +
-      right.getToken().posString() + " of Type: " +
-      right.getType().toString());
+      "Location " + left.toString() + left.getToken().posString() + " and " +
+      right.toString() + right.getToken().posString() +
+      " are of differing Types.");
   }
 
-  private void procedureTypeException(Type type) throws Exception {
-    throw new Exception("Return Type of a Procedure must be Integer. " +
-      "Instead, found: " + type.toString());
-  }
-
-  private void procedureExpressionTypeException(Type type) throws Exception {
-    throw new Exception("Return Type of Expression inside Procedure must " +
-      "be Integer. Instead, found: " + type.toString());
-  }
-
-  private void unnamedTypeException(Token token) throws Exception {
-    throw new Exception("Parameter Type inside Procedure must " +
-      "be a previously declared Type.\nFound " +
-      token.returnVal() + token.posString());
-  }
-
-  private void returnInProcedureException(Token token) throws Exception {
-    throw new Exception("Return Expression found inside non-functional " +
-      "Procedure: " + token.returnVal() + token.posString());
-  }
-
-  private void noReturnInFunctionException(Token token) throws Exception {
-    throw new Exception("No return Expression found inside Function " +
-      token.returnVal() + token.posString());
-  }
-
-  // Initializes the Observer
+  /**
+   * Initialize the Observer.
+   */
   private void notify_start() {
     this.obs.start();
   }
 
-  // Ends the Observer
+  /**
+   * Terminate Observer activity.
+   */
   private void notify_eof() {
     this.obs.end();
   }
 
-  // Reduce tab depth by one
+  /**
+   * Notify the observer of the end of a Production.
+   * (Reduces tab depth by one)
+   */
   private void notify_end() {
     this.obs.update_end();
   }
 
-  // Updates Observer with a Production
+  /**
+   * Updates Observer with a Production name.
+   */
   private void notify(String token) {
     this.obs.update(token);
   }
-  // Updates Observer with a new token
+
+  /**
+   * Updates Observer with a new Token.
+   */
   private void notify(Token token) {
     this.obs.update(token);
   }
 
-  // table insertion with a single identifier
+  /**
+   * Symbol Table insertion with a single identifier
+   */
   private void table_insert(Token token, Entry entry) throws Exception {
     String name = token.returnVal();
     // check if another entry with same name was already declared
@@ -301,7 +316,9 @@ public class Parser {
     this.curr_scope.insert(name, entry);
   }
 
-  // table insertion with IdentifierList
+  /**
+   * Symbol Table insertion with IdentifierList
+   */
   private void table_insert(ArrayList<Token> list, Type type)
     throws Exception {
     for (Token token : list) {
@@ -314,7 +331,9 @@ public class Parser {
     }
   }
 
-  // record insertion with IdentifierList
+  /**
+   * Record insertion with IdentifierList
+   */
   private void record_insert(ArrayList<Token> list, Type type)
     throws Exception {
     for (Token token : list) {
@@ -327,34 +346,15 @@ public class Parser {
     }
   }
 
-  // record insertion with IdentifierList
-  private void formal_insert(ArrayList<Token> list, Type type)
-    throws Exception {
-    for (Token token : list) {
-      String name = token.returnVal();
-      // check if another entry with same name was already declared
-      if (this.curr_scope.local(name)) {
-        this.identifierExistsException(token);
-      }
-      this.curr_scope.insert(name, new FormalVariable(type));
-    }
-  }
-
   /**
    * Checks that the given Selector of a Record exists.
    * If the Record or Selector doesn't exist, throw an exception
+   * @param loc the Location of the Record
+   * @param token the Selector to check
+   * @param field the Field selected
    */
   private Field find_record(Location loc, Token selector) throws Exception {
-    Record rec = null;
-    // First check that the Location is a Record Type
-    this.checkRecord(loc);
-    // If Location is an Index, then we can't search directly through S.T
-    // If location is an Entry in S.T, then directly search for it.
-    if (loc.isIndex()) {
-      rec = (Record) loc.getType();
-    } else {
-      rec = (Record) this.find_entry(loc.getToken()).getType();
-    }
+    Record rec = (Record) loc.getType();
     Field field = (Field) rec.getFields().local_find(selector.returnVal());
     if (field == null) {
       this.illegalSelectorException(loc, selector);
@@ -365,6 +365,7 @@ public class Parser {
   /**
    * Search the current scope for an identifier.
    * Throw an exception if the identifier is not found.
+   * @param token the Token to check
    * @return entry the found entry
    */
   private Entry find_entry(Token token) throws Exception {
@@ -380,7 +381,7 @@ public class Parser {
    * Return a Constant entry from Symbol Table
    * Throw an exception if given Token is not a Constant Type.
    * @param token the token to search for
-   * return the Constant Entry from Symbol Table
+   * @return the Constant Entry from Symbol Table
    */
   private Constant getConstant(Token token) throws Exception {
     if (!this.isConstant(token)) {
@@ -392,6 +393,7 @@ public class Parser {
   /**
    * Check if Identifier is a Constant.
    * If identifier has not been declared already, throw exception
+   * @param token the Token to check
    * @return true if Type, else false
    */
   private boolean isConstant(Token token) throws Exception {
@@ -400,7 +402,8 @@ public class Parser {
   }
 
   /**
-   * Return true if Expression is a Constant/literal greater than 0, else false
+   * Check if Expression is a Constant/literal greater than 0
+   * @return True if above condition is true, else False
    */
   private boolean checkPositiveConstant(Expression exp) throws Exception {
     String name = exp.getToken().returnVal();
@@ -429,7 +432,7 @@ public class Parser {
 
   /**
    * Return true if Expression is a Constant/literal, else false
-   *
+   * @return True if above condition is true, else False
    */
   private Boolean checkConstant(Expression exp) throws Exception {
     String name = exp.getToken().returnVal();
@@ -449,9 +452,10 @@ public class Parser {
   }
 
   /**
-   * Return the Entry Type associated with a given identifier name.
-   * If identifier is not a Type, throw exception
-   * @return entry the found Type
+   * Return the Type associated with a given identifier name.
+   * If identifier is not a Type or isn't in the Symbol Table,
+   * throw an exception.
+   * @return the found Type
    */
   private Type getType(Token token) throws Exception {
     if (!this.isType(token)) {
@@ -462,7 +466,7 @@ public class Parser {
 
   /**
    * Check if Identifier is a Type.
-   * If identifier has not been declared already, throw exception
+   * If identifier has not been declared already, throw an exception.
    * @return true if Type, else false
    */
   private boolean isType(Token token) throws Exception {
@@ -472,8 +476,9 @@ public class Parser {
 
   /**
    * Return the a Variable associated with a given identifier name.
-   * If identifier is not a variable, throw exception.
-   * @return entry the found Variable
+   * If identifier is not a variable or isn't in the Symbol Table,
+   * throw an exception.
+   * @return the found Variable
    */
   private Variable getVariable(Token token) throws Exception {
     if (!this.isVariable(token)) {
@@ -484,7 +489,7 @@ public class Parser {
 
   /**
    * Check if Identifier is a Variable.
-   * If identifier has not been declared already, throw exception
+   * If identifier has not been declared already, throw an exception.
    * @return true if Type, else false
    */
   private boolean isVariable(Token token) throws Exception {
@@ -493,45 +498,45 @@ public class Parser {
   }
 
   /**
-   * Return the a Procedure associated with a given identifier name.
-   * If identifier is not a Procedure, throw exception.
-   * @return entry the found Variable
+   * Check if Location from Selector is an Array.
+   * If Location is not an Array, throw an exception.
+   * @param node the Node to check
    */
-  private Procedure getProcedure(Token token) throws Exception {
-    if (!this.isProcedure(token)) {
-      this.identifierNotProcException(token);
-    }
-    return (Procedure) this.find_entry(token);
-  }
-
-  /**
-   * Check if Identifier is a Procedure.
-   * If identifier has not been declared already, throw exception
-   * @return true if Type, else false
-   */
-  private boolean isProcedure(Token token) throws Exception {
-    Entry entry = this.find_entry(token);
-    return entry.isProcedure();
-  }
-
   private void checkArray(Location loc) throws Exception {
     if (!loc.getType().isArray()) {
       this.identifierNotArrayException(loc, loc.getToken());
     }
   }
 
+  /**
+   * Check if Location from Selector is a Record.
+   * If Location is not a Record, throw an exception.
+   * @param node the Node to check
+   */
   private void checkRecord(Location loc) throws Exception {
     if (!loc.getType().isRecord()) {
       this.identifierNotRecordException(loc, loc.getToken());
     }
   }
 
+  /**
+   * Check if Node is an Integer Type.
+   * If Node is not an Integer, throw an exception.
+   * @param node the Node to check
+   */
   private void checkInteger(Node node) throws Exception {
     if (!node.getType().isInteger()) {
       this.identifierNotIntegerException(node, node.getToken());
     }
   }
 
+  /**
+   * First, checks that a Node is a Location then
+   * returns the Node casted into a Location.
+   * If Node is not a Location, throw exception.
+   * @param node the Node to check
+   * @return the Node casted into a Location
+   */
   private Location getLocation(Node node) throws Exception {
     if (!node.isLocation()) {
       this.nodeNotLocationException(node, node.getToken());
@@ -540,19 +545,26 @@ public class Parser {
     return (Location) node;
   }
 
+  /**
+   * Check if Node left and Node right have same Types.
+   * If not, throw an exception.
+   * @return true if Type, else false
+   */
   private void matchType(Node left, Node right) throws Exception {
-    if (!left.getType().matchType(right.getType())) {
+    if (left.getType() != right.getType()) {
       this.unmatchedTypeException(left, right);
     }
   }
 
-  // Function to get the converted Condition for Repeat instructions
-  // '=' -> '#'
-  // '#' -> '='
-  // '<' -> '>='
-  // '>' -> '<='
-  // '<=' -> '>'
-  // '>=' -> '<'
+  /**
+   * Function to get the converted Condition for Repeat instructions
+   * '=' -> '#'
+   * '#' -> '='
+   * '<' -> '>='
+   * '>' -> '<='
+   * '<=' -> '>'
+   * '>=' -> '<'
+   */
   private Condition convertCond(Condition cond) throws Exception {
     String op = cond.getRelation().returnVal();
     if (op.equals("=")) {
@@ -570,10 +582,10 @@ public class Parser {
     }
   }
 
-  /*
-    Program = "PROGRAM" identifier ";" Declarations
-      ["BEGIN" Instructions] "END" identifier "." .
-  */
+  /**
+   * Program = "PROGRAM" identifier ";" Declarations
+   *   ["BEGIN" Instructions] "END" identifier "." .
+   */
   private boolean program() throws Exception {
     this.notify_start();
     this.notify("Program");
@@ -581,7 +593,6 @@ public class Parser {
     Token begin = this.match("identifier");
     this.match(this.SEMICOLON);
     this.declarations();
-    // Create the environment from the Symbol Table
     this.curr_scope.createEnvironment(this.env);
     if (this.match_opt(this.BEGIN)) {
       this.match(this.BEGIN);
@@ -611,8 +622,6 @@ public class Parser {
         this.typeDecl();
       } else if (this.match_opt(this.VAR)) {
         this.varDecl();
-      } else if (this.match_opt(this.PROC)) {
-        this.procDecl();
       } else {
         break;
       }
@@ -678,133 +687,10 @@ public class Parser {
     this.notify_end();
   }
 
-  /*  ProcDecl = "PROCEDURE" identifier "(" [Formals] ")" [":" Type] ";"
-        { VarDecl } [ "BEGIN" Instructions ] [ "RETURN" Expression ]
-        "END" identifier ";" .
-  */
-  private void procDecl() throws Exception {
-    this.notify("ProcDecl");
-    Scope proc_scope = new Scope(this.curr_scope);
-    // Set the current Scope to the new Scope
-    this.curr_scope = proc_scope;
-    Type curr_type = null;
-    AST instructions = null;
-    Expression exp = null;
-    this.match(this.PROC);
-    Token begin = this.match("identifier");
-    this.match(this.OPENPAR);
-    if (this.curr_token.isIdentifier()) {
-      this.formals();
-    }
-    this.match(this.CLOSEPAR);
-    if (this.match_opt(this.COLON)) {
-      this.match(this.COLON);
-      curr_type = this.type();
-      // Return Type must be Integer
-      if (!curr_type.isInteger()) {
-        this.procedureTypeException(curr_type);
-      }
-    }
-    this.match(this.SEMICOLON);
-    if (this.match_opt(this.VAR)) {
-      this.varDecl();
-    }
-    if (this.match_opt(this.BEGIN)) {
-      this.match(this.BEGIN);
-      instructions = this.instructions();
-    }
-    if (this.match_opt(this.RETURN)) {
-      this.match(this.RETURN);
-      exp = this.expression();
-      // Expression must also be Integer
-      if (!exp.getType().isInteger()) {
-        this.procedureExpressionTypeException(exp.getType());
-      }
-    }
-    this.match(this.END);
-    Token last = this.match("identifier");
-    if (!begin.returnVal().equals(last.returnVal())) {
-      this.unmatchedProcNameException(begin, last);
-    }
-    this.match(this.SEMICOLON);
-    Procedure proc = new Procedure(proc_scope, curr_type, instructions, exp);
-    this.curr_scope = proc_scope.getParent();
-    proc_scope.setParent(null);
-    this.table_insert(begin, proc);
-    this.notify_end();
-  }
-
-  // Formals = Formal { ";" Formal } .
-  private void formals() throws Exception {
-    this.notify("Formals");
-    this.formal();
-    while (this.match_opt(this.SEMICOLON)) {
-      this.match(this.SEMICOLON);
-      this.formal();
-    }
-    this.notify_end();
-  }
-
-  // Formal = IdentifierList ":" Type .
-  private void formal() throws Exception {
-    this.notify("Formal");
-    ArrayList<Token> id_list = this.identifierList();
-    this.match(this.COLON);
-    try {
-      this.isType(this.curr_token);
-    } catch (Exception e) {
-      this.unnamedTypeException(this.curr_token);
-    }
-    Type curr_type = this.type();
-    this.formal_insert(id_list, curr_type);
-    this.notify_end();
-  }
-
-  // Call = identifier "(" [Actuals] ")" .
-  private Expression functionCall() throws Exception {
-    this.notify("Call");
-    // TODO: Fix this
-    ProcedureCall proc_call = null;
-    FunctionCall func_call = null;
-    Expression exp = null;
-    ArrayList<Expression> exp_list = null;
-    Token token = this.match("identifier");
-    Procedure proc = this.getProcedure(token);
-    if (!proc.hasReturn()) {
-      this.noReturnInFunctionException(token);
-    }
-    this.match(this.OPENPAR);
-    // Optional ExpressionList
-    try {
-      exp_list = this.actuals();
-    } catch (Exception e) {}
-    this.match(this.CLOSEPAR);
-    proc_call = new ProcedureCall(proc, exp_list, token);
-    func_call = new FunctionCall(proc_call, proc, this.env);
-    Box exp_box = func_call.returnExpBox();
-    if (exp_box.isInteger()) {
-      int value = exp_box.getVal();
-      exp = new Expression(new Constant(this.INTEGER, value),
-        new Token("integer", value + "", 0, 0));
-    } else {
-      // Should never get this exception
-      this.procedureExpressionTypeException(exp.getType());
-    }
-    this.notify_end();
-    return exp;
-  }
-
-  private ArrayList<Expression> actuals() throws Exception {
-    this.notify("Actuals");
-    ArrayList<Expression> exp_list = this.expressionList();
-    this.notify_end();
-    return exp_list;
-  }
-
   /*
-    identifier | "ARRAY" Expression "OF" Type |
-      "RECORD" {IdentifierList ":" Type ";"} "END" .
-  */
+   * Type = identifier | "ARRAY" Expression "OF" Type |
+   *  "RECORD" {IdentifierList ":" Type ";"} "END" .
+   */
   private Type type() throws Exception {
     Type type = null;
     this.notify("Type");
@@ -861,7 +747,7 @@ public class Parser {
     return rec;
   }
 
-  // ["+"|"-"] Term {("+"|"-") Term} .
+  // Expression = ["+"|"-"] Term {("+"|"-") Term} .
   private Expression expression() throws Exception {
     ArrayList<Token> list =
       new ArrayList<Token>(Arrays.asList(this.PLUS, this.MINUS));
@@ -896,7 +782,7 @@ public class Parser {
     return left;
   }
 
-  // Factor {("*"|"DIV"|"MOD") Factor} .
+  // Term = Factor {("*"|"DIV"|"MOD") Factor} .
   private Expression term() throws Exception {
     ArrayList<Token> list =
       new ArrayList<Token>(Arrays.asList(this.STAR, this.DIV, this.MOD));
@@ -916,7 +802,7 @@ public class Parser {
     return left;
   }
 
-  // integer | Designator | "(" Expression ")" .
+  // Factor = integer | Designator | "(" Expression ")" .
   private Expression factor() throws Exception {
     this.notify("Factor");
     Expression exp = null;
@@ -925,19 +811,13 @@ public class Parser {
       exp = new Expression(new Constant(
         this.INTEGER, token.returnIntVal()), token);
     } else if (this.curr_token.isIdentifier()) {
-      if (this.isProcedure(this.curr_token)) {
-        exp = this.functionCall();
-      } else {
-        // Either we have a Number or Location from a Variable
-        Node node = this.designator();
-        if (node.isLocation()) {
-          exp = new Expression((Location) node);
-        } else if (node.isExpression()) {
-          exp = (Expression) node;
-        }
+      // Either we have a Number or Location from a Variable
+      Node node = this.designator();
+      if (node.isLocation()) {
+        exp = new Expression((Location) node);
+      } else if (node.isExpression()) {
+        exp = (Expression) node;
       }
-    } else if (this.match_opt(this.OPENPAR)) {
-      exp = this.factor_expression();
     } else if (this.match_opt(this.OPENPAR)) {
       exp = this.factor_expression();
     } else {
@@ -955,7 +835,7 @@ public class Parser {
     return exp;
   }
 
-  // Instruction {";" Instruction} .
+  // Instructions = Instruction {";" Instruction} .
   private AST instructions() throws Exception {
     this.notify("Instructions");
     AST instructions = new AST(this.instruction());
@@ -967,16 +847,12 @@ public class Parser {
     return instructions;
   }
 
-  // Assign | If | Repeat | While | Read | Write .
+  // Instruction = Assign | If | Repeat | While | Read | Write .
   private Instruction instruction() throws Exception {
     Instruction instr = null;
     this.notify("Instruction");
     if (this.curr_token.isIdentifier()) {
-      if (this.isProcedure(this.curr_token)) {
-        instr = this.procedureCall();
-      } else {
-        instr = this.assign();
-      }
+      instr = this.assign();
     } else if (this.match_opt(this.IF)) {
       instr = this.If();
     } else if (this.match_opt(this.REPEAT)) {
@@ -994,7 +870,7 @@ public class Parser {
     return instr;
   }
 
-  // Designator ":=" Expression .
+  // Assign = Designator ":=" Expression .
   private Instruction assign() throws Exception {
     Instruction assign = null;
     this.notify("Assign");
@@ -1010,7 +886,7 @@ public class Parser {
     return assign;
   }
 
-  // "IF" Condition "THEN" Instructions ["ELSE" Instructions] "END" .
+  // If = "IF" Condition "THEN" Instructions ["ELSE" Instructions] "END" .
   private Instruction If() throws Exception {
     If if_ = null;
     this.notify("If");
@@ -1030,7 +906,6 @@ public class Parser {
     return if_;
   }
 
-  // "REPEAT" Instructions "UNTIL" Condition "END" .
   private Instruction repeat() throws Exception {
     this.notify("Repeat");
     this.match(this.REPEAT);
@@ -1045,7 +920,7 @@ public class Parser {
     return repeat;
   }
 
-  // "WHILE" Condition "DO" Instructions "END" .
+  // While = "WHILE" Condition "DO" Instructions "END" .
   private Instruction While() throws Exception {
     this.notify("While");
     this.match(this.WHILE);
@@ -1063,7 +938,7 @@ public class Parser {
     return new If(cond, repeat);
   }
 
-  // Expression ("="|"#"|"<"|">"|"<="|">=") Expression .
+  // Condition = Expression ("="|"#"|"<"|">"|"<="|">=") Expression .
   private Condition condition() throws Exception {
     ArrayList<Token> list =
       new ArrayList<Token>(Arrays.asList
@@ -1076,7 +951,7 @@ public class Parser {
     return new Condition(relation, left, right);
   }
 
-  // "WRITE" Expression .
+  // Write = "WRITE" Expression .
   private Instruction write() throws Exception {
     this.notify("Write");
     this.match(this.WRITE);
@@ -1087,7 +962,7 @@ public class Parser {
     return new Write(exp);
   }
 
-  // "READ" Designator .
+  // Read = "READ" Designator .
   private Instruction read() throws Exception {
     this.notify("Read");
     this.match(this.READ);
@@ -1099,29 +974,7 @@ public class Parser {
     return new Read(loc);
   }
 
-  private Instruction procedureCall() throws Exception {
-    this.notify("Call");
-    // TODO: Fix this
-    Instruction call = null;
-    ArrayList<Expression> exp_list = null;
-    Token token = this.match("identifier");
-    // Get Procedure Entry from S.T, else throw exception
-    Procedure proc = this.getProcedure(token);
-    if (proc.hasReturn()) {
-      this.returnInProcedureException(token);
-    }
-    this.match(this.OPENPAR);
-    // Optional ExpressionList
-    try {
-      exp_list = this.actuals();
-    } catch (Exception e) {}
-    this.match(this.CLOSEPAR);
-    this.notify_end();
-    call = new ProcedureCall(proc, exp_list, token);
-    return call;
-  }
-
-  // identifier Selector .
+  // Designator = identifier Selector .
   private Node designator() throws Exception {
     this.notify("Designator");
     // If current identifier is a Type, throw exception
@@ -1145,7 +998,7 @@ public class Parser {
     return node;
   }
 
-  // {"[" ExpressionList "]" | "." identifier} .
+  // Selector = {"[" ExpressionList "]" | "." identifier} .
   private Location selector(Node node) throws Exception {
     this.notify("Selector");
     Location select = null;
@@ -1168,6 +1021,7 @@ public class Parser {
         // Check that the field of the record exists, else throw exception
         Field field = this.find_record(select, selector);
         select = new RecordField(select, field, selector);
+        start = select;
       }
     }
     this.notify_end();
@@ -1189,9 +1043,7 @@ public class Parser {
     return array;
   }
 
-  // return all identifier names in a list in order to be added to
-  // symbol table later
-  // identifier {"," identifier} .
+  // IdentifierList = identifier {"," identifier} .
   private ArrayList<Token> identifierList() throws Exception {
     ArrayList<Token> id_list = new ArrayList<Token>();
     this.notify("IdentifierList");
@@ -1204,7 +1056,7 @@ public class Parser {
     return id_list;
   }
 
-  // Expression {"," Expression} .
+  // ExpressionList = Expression {"," Expression} .
   private ArrayList<Expression> expressionList() throws Exception {
     ArrayList<Expression> exp_list = new ArrayList<Expression>();
     this.notify("ExpressionList");
@@ -1217,35 +1069,61 @@ public class Parser {
     return exp_list;
   }
 
+  /* Parse the source code
+   */
   public void parse() throws Exception {
     // Create the concrete syntax tree, symbol table, abstract syntax tree
     this.program();
   }
 
-  public Scope returnST() {
-    return this.curr_scope;
+  /**
+   * Return the Symbol Table
+   * @return the Symbol Table in a textual or graphical DOT format
+   */
+  public String returnST() {
+    if (!this.curr_scope.isEmpty()) {
+      this.visitor.start(false);
+      this.visitor.visit(this.curr_scope);
+      this.visitor.end(false);
+    }
+    return this.visitor.toString();
   }
 
-  public AST returnAST() {
-    return this.ast != null ? this.ast : null;
+  /**
+   * Return the Abstract Syntax Tree
+   * return this.ast != null ? this.ast : null;
+   * @return ast
+   */
+  public String returnAST() {
+    if (this.ast != null) {
+      this.visitor.start(true);
+      this.visitor.visit(this.ast);
+      this.visitor.end(true);
+    }
+    return this.visitor.toString();
   }
 
+  /**
+   * Return the Environment
+   * @return env
+   */
   public Environment returnEnv() throws Exception {
     if (this.ast != null) {
       this.ast.interpret(this.env);
+      // Close the BufferedReader used for Read instructions
+      this.env.close_reader();
       return this.env;
     } else {
       return null;
     }
   }
 
+  /**
+   * Begin generating gas code for the ARMv6 architecture
+   * @return the generated code
+   */
   public String generateCode() throws Exception {
     this.gen = new Generator(this.curr_scope, this.env, this.ast);
     return this.gen.generateCode();
-  }
-
-  // debug function
-  private void print(String string) {
-    System.out.println(string);
   }
 }

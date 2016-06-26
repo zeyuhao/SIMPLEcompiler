@@ -24,6 +24,26 @@ public class If extends Instruction {
     this.instr_true = instr_true;
   }
 
+  public Condition getCond() {
+    return this.cond;
+  }
+
+  public AST getTrue() {
+    return this.instr_true;
+  }
+
+  public AST getFalse() {
+    return this.instr_false;
+  }
+
+  public Boolean hasFalse() {
+    return this.instr_false != null;
+  }
+
+  public String accept(Visitor visitor) {
+    return visitor.visit(this, "If");
+  }
+
   public void run(Environment env) throws Exception {
     if (this.cond.isTrue(env)) {
       this.instr_true.interpret(env);

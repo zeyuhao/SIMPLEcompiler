@@ -11,6 +11,14 @@ public class Write extends Instruction {
     exp.setParent(this);
   }
 
+  public String accept(Visitor visitor) {
+    return visitor.visit(this, "Write");
+  }
+
+  public Expression getExp() {
+    return this.exp;
+  }
+
   public void run(Environment env) throws Exception {
     Box exp_box = this.getExpBox(this.exp, env);
     int value = exp_box.getVal();

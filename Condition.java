@@ -29,6 +29,14 @@ public class Condition extends Instruction {
     return this.relation;
   }
 
+  public Expression getLeft() {
+    return this.left;
+  }
+
+  public Expression getRight() {
+    return this.right;
+  }
+
   public Condition copyCondition(Token relation) throws Exception {
     return new Condition(relation, this.left, this.right);
   }

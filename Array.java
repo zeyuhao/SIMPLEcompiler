@@ -30,6 +30,10 @@ public class Array extends Type {
     return this.length() * this.elemType().getMemSpace();
   }
 
+  public void accept(Visitor visitor, String name) {
+    visitor.visit(this, name);
+  }
+
   public String toString() {
     return "Array " + this.length.returnVal() + " of " + this.type.toString();
   }

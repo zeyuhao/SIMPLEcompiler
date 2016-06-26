@@ -5,7 +5,7 @@ zhao7@jhu.edu
 
 public class Constant extends Entry {
   private int value;
-  
+
   public Constant(Type type, int value) {
     this.type = type;
     this.value = value;
@@ -13,6 +13,10 @@ public class Constant extends Entry {
 
   public boolean isConstant() {
     return true;
+  }
+
+  public void accept(Visitor visitor, String name) {
+    visitor.visit(this, name);
   }
 
   public int returnVal() {

@@ -3,7 +3,7 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-import java.util.HashMap;
+import java.util.Map;
 import java.lang.String;
 
 public class Generator {
@@ -60,8 +60,8 @@ public class Generator {
   // Generate code to initialize all variables from symbol table
   private void initialize() {
     this.code += ".data\n\n";
-    HashMap<String, Entry> table = this.symbol_table.getTable();
-    for (HashMap.Entry<String, Entry> entry : table.entrySet()) {
+    Map<String, Entry> table = this.symbol_table.getTable();
+    for (Map.Entry<String, Entry> entry : table.entrySet()) {
       String name = entry.getKey();  // name of the Variable
       Entry var = entry.getValue(); // the actual Variable
       // Only keep track of variables in the Environment

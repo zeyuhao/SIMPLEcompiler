@@ -13,8 +13,8 @@ public class Integer extends Type {
     return "Integer";
   }
 
-  public int getMemSpace() {
-    return 4;
+  public void accept(Visitor visitor, String name) {
+    visitor.visit(this, name);
   }
 
   public String toString() {

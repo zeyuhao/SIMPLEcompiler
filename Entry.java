@@ -25,4 +25,7 @@ public class Entry {
   public Type getType() {
     return this.type;
   }
+
+  public void accept(Visitor visitor, String name) {
+  }
 }

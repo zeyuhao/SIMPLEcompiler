@@ -19,7 +19,21 @@ public class Repeat extends Instruction {
     this.conv_cond = cond;
   }
 
+  public Condition getCond() {
+    return this.cond;
+  }
+
+  public AST getInstr() {
+    return this.instr;
+  }
+
+  public String accept(Visitor visitor) {
+    return visitor.visit(this, "Repeat");
+  }
+
+  // Repeat runs at least once
   public void run(Environment env) throws Exception {
+    this.instr.interpret(env);
     while (this.conv_cond.isTrue(env)) {
       this.instr.interpret(env);
     }

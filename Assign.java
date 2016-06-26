@@ -14,6 +14,18 @@ public class Assign extends Instruction {
     exp.setParent(this);
   }
 
+  public String accept(Visitor visitor) {
+    return visitor.visit(this, "Assign");
+  }
+
+  public Location getLoc() {
+    return this.loc;
+  }
+
+  public Expression getExp() {
+    return this.exp;
+  }
+
   public void run(Environment env) throws Exception {
     // Get the base leftmost Location Variable we are operating from
     Location base = this.getBase(this.loc);

@@ -3,24 +3,25 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.ArrayList;
 
 public class RecordBox extends Box {
-  private HashMap<String, Box> record;
+  private Map<String, Box> record;
   private Type type;
 
   // Create a RecordBox based directly off of the S.T Record Entry
   public RecordBox(Type record, int address) {
     this.type = record;
-    this.record = new HashMap<String, Box>();
+    this.record = new TreeMap<String, Box>();
     this.address = address;
     this.initialize(record);
   }
 
   private void initialize(Type record) {
-    HashMap<String, Entry> rec = ((Record)record).getFields().getTable();
-    for (HashMap.Entry<String, Entry> entry : rec.entrySet()) {
+    Map<String, Entry> rec = ((Record)record).getFields().getTable();
+    for (Map.Entry<String, Entry> entry : rec.entrySet()) {
       String name = entry.getKey();
       Entry field = entry.getValue();
       Type type = field.getType();
@@ -57,7 +58,7 @@ public class RecordBox extends Box {
     box = other;
   }
 
-  public HashMap<String, Box> getRecord() {
+  public Map<String, Box> getRecord() {
     return this.record;
   }
 
@@ -69,13 +70,13 @@ public class RecordBox extends Box {
     return true;
   }
 
-  public void setRecord(HashMap<String, Box> record) {
+  public void setRecord(Map<String, Box> record) {
     this.record = record;
   }
 
-  public HashMap<String, Box> deepCopy() {
-    HashMap<String, Box> copy = new HashMap<String, Box>();
-    for (HashMap.Entry<String, Box> entry : this.record.entrySet()) {
+  public Map<String, Box> deepCopy() {
+    Map<String, Box> copy = new TreeMap<String, Box>();
+    for (Map.Entry<String, Box> entry : this.record.entrySet()) {
       String key = entry.getKey();
       Box box = entry.getValue();
       int curr_address = box.getAddress();
@@ -98,17 +99,11 @@ public class RecordBox extends Box {
   // Deep copy of other ArrayBox for assigning RecordBox to RecordBox
   public void assign(RecordBox other) {
     this.record = other.deepCopy();
-    /*this.record = new HashMap<String, Box>();
-    for (HashMap.Entry<String, Box> entry : other.getRecord().entrySet()) {
-      String key = entry.getKey();
-      Box box = entry.getValue();
-      this.insertBox(key, box);
-    }*/
   }
 
   public String toString() {
     String str = "Record:\n";
-    for (HashMap.Entry<String, Box> entry : this.getRecord().entrySet()) {
+    for (Map.Entry<String, Box> entry : this.getRecord().entrySet()) {
       String key = entry.getKey();
       Box box = entry.getValue();
       str += "  " + key + " - " + box.toString() + "\n";

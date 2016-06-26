@@ -17,12 +17,12 @@ public class AST extends Node {
     this.current = next;
   }
 
-  private Instruction nextNode(Instruction node) {
-    return node.getNext();
+  private boolean hasNext() {
+    return this.current.getNext() != null;
   }
 
-  private boolean hasNext(Instruction node) {
-    return node.getNext() != null;
+  public Instruction getHead() {
+    return this.head;
   }
 
   // Run each Instruction in the AST
@@ -30,7 +30,7 @@ public class AST extends Node {
     Instruction curr = this.head;
     while(curr != null) {
       curr.run(env);
-      curr = this.nextNode(curr);
+      curr = curr.getNext();
     }
   }
 
@@ -41,7 +41,7 @@ public class AST extends Node {
     Instruction curr = this.head;
     while(curr != null) {
       str += curr.generateCode(env, reg);
-      curr = this.nextNode(curr);
+      curr = curr.getNext();
     }
     return str;
   }
@@ -49,8 +49,8 @@ public class AST extends Node {
   public String toString() {
     String tree = this.head.toString() + "\n";
     Instruction curr = this.head;
-    while(this.hasNext(curr)) {
-      curr = this.nextNode(curr);
+    while(this.hasNext()) {
+      curr = curr.getNext();
       tree += curr.toString() + "\n";
     }
     int index = tree.lastIndexOf("\n");

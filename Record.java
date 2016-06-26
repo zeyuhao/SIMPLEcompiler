@@ -3,7 +3,7 @@ Zeyu Hao
 zhao7@jhu.edu
 */
 
-import java.util.HashMap;
+import java.util.Map;
 
 public class Record extends Type {
   private Scope fields;
@@ -25,13 +25,17 @@ public class Record extends Type {
 
   public int getMemSpace() {
     int mem = 0;
-    HashMap<String, Entry> rec = this.fields.getTable();
-    for (HashMap.Entry<String, Entry> entry : rec.entrySet()) {
+    Map<String, Entry> rec = this.fields.getTable();
+    for (Map.Entry<String, Entry> entry : rec.entrySet()) {
       String key = entry.getKey();
       Type type = entry.getValue().getType();
       mem += type.getMemSpace();
     }
     return mem;
+  }
+
+  public void accept(Visitor visitor, String name) {
+    visitor.visit(this, name);
   }
 
   public String toString() {
