@@ -1,6 +1,6 @@
 Zeyu Hao
 zhao7@jhu.edu
-Assignment 6: Interpreter
+SIMPLE Compiler
 
 Makefile
 ===================================================================
@@ -98,7 +98,7 @@ Expression data by parsing the expression() and designator() functions
 Node, which gets returned back to the instructions() function. This
 repeats until we finish parsing instructions(), in which case the
 fully finished AST node gets returned back to the original call to
-program(), which sets the global AST to the AST just returned. 
+program(), which sets the global AST to the AST just returned.
 
 In this assignment, a previous error where we couldn't run an
 Instruction on a Location where Records were directly nested into
@@ -131,8 +131,26 @@ Example, if the run() function was called in Assign:
 1) Find the correct Box from Environment specified by the Location
 2) Insert the correct Expression value into the Location Box that
    we just selected from the Environment
-Every Instruction instaneously updates the Environment whenever a
+Every Instruction instantaneously updates the Environment whenever a
 value is written to it.
+
+
+
+Generator
+===================================================================
+Generator.java is the class that controls all of the code
+generation processes inside the compiler. First, it runs an initialize()
+function that sets up all of the addresses needed for all of the
+variables that have been stored in the symbol table at run time. This
+way, when we arrive at code generation for instructions, we are able to
+access addresses for locations where values are to be read or written to.
+The process() function is where we call another function inside AST.java
+that traverses the AST, and runs the code generation functions specific
+to each of those Instructions. Once we have traversed the entire AST
+and generated code for all instructions, we return from initialize()
+and run a final function called end() that adds additional components
+like enabling printing to stdout and reading from stdin.
+
 
 
 Graphical Output
@@ -151,7 +169,7 @@ parser which uses the attached Visitor (either textual or graphical)
 to traverse either the AST/Symbol Table. Once visiting begins, we
 iterate through each Instruction of the Abstract Symbol Tree or
 each Entry of the Symbol Table and then call the corresponding visit
-function for each Instruction/Entry that we reach. 
+function for each Instruction/Entry that we reach.
 
 In order to convert this DOT code into an image format
 such as a PNG, the following commands should be used:

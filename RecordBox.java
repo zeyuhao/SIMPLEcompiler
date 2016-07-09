@@ -89,14 +89,14 @@ public class RecordBox extends Box {
         copy.put(key, new ArrayBox(((ArrayBox)box).getType(), curr_address));
         ((ArrayBox)copy.get(key)).setArray(((ArrayBox)box).deepCopy());
       } else if (box.isRecord()) {
-        copy.put(key, new RecordBox(((ArrayBox)box).getType(), curr_address));
+        copy.put(key, new RecordBox(((RecordBox)box).getType(), curr_address));
         ((RecordBox)copy.get(key)).setRecord(((RecordBox)box).deepCopy());
       }
     }
     return copy;
   }
 
-  // Deep copy of other ArrayBox for assigning RecordBox to RecordBox
+  // Deep copy of other RecordBox for assigning RecordBox to RecordBox
   public void assign(RecordBox other) {
     this.record = other.deepCopy();
   }

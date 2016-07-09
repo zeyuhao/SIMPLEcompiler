@@ -35,8 +35,12 @@ public class Assign extends Instruction {
       int value = exp_box.getVal();
       ((IntegerBox)box).setBox(value);
     } else if (box.isArray() && exp_box.isArray()) {
+      // Deep copy of ArrayBox
       ((ArrayBox)box).assign((ArrayBox)exp_box);
+      System.out.println(box.toString());
+      System.out.println(exp_box.toString());
     } else if (box.isRecord() && exp_box.isRecord()) {
+      // Deepy copy of RecordBox
       ((RecordBox)box).assign((RecordBox)exp_box);
     }
   }
@@ -51,13 +55,16 @@ public class Assign extends Instruction {
     reg.setInUse();
     String val_reg = reg.available();
     reg.setInUse();
+    // First load loc_reg with the addr of the location we are assigning to
     str += "\tldr " + loc_reg + ", addr_" + name + "\n";
     if (this.exp.isConstant()) {
       str += this.moveConstant(this.exp, val_reg);
     } else {
       str += this.getExpCode(this.exp, env, reg, val_reg);
     }
+    // Store value inside val_reg into loc_reg at offset addr
     str += "\tstr " + val_reg + ", [" + loc_reg + ", +#" + addr + "]\n\n";
+    // Reset all registers for use in the next Instruction
     reg.reset();
     return str;
   }

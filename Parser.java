@@ -930,8 +930,10 @@ public class Parser {
     this.match(this.END);
     this.notify_end();
     // Set a new Condition for the Repeat with a converted operator
-    Condition repeat_cond = this.convertCond(cond);
-    Repeat rep = new Repeat(repeat_cond, instr);
+    Condition conv_cond = this.convertCond(cond);
+    // repeat_cond is what gets displayed graphically for the AST
+    Repeat rep = new Repeat(conv_cond, instr);
+    // cond is the actual condition that gets checked for, not conv_cond
     rep.setConvCond(cond);
     AST repeat = new AST(rep);
     // Nest the Repeat inside an If

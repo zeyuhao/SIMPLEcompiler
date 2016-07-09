@@ -33,7 +33,11 @@ public class Write extends Instruction {
     str += "\tldr " + reg_0 + ", =wformat\n";
     String reg_1 = reg.available();
     reg.setInUse();
-    str += this.getExpCode(this.exp, env, reg, reg_1);
+    if (this.exp.isConstant()) {
+      str += this.moveConstant(this.exp, reg_1);
+    } else {
+      str += this.getExpCode(this.exp, env, reg, reg_1);
+    }
     str += "\tbl printf\n\n";
     reg.reset();
     return str;

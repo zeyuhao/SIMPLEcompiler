@@ -6,10 +6,14 @@ zhao7@jhu.edu
 public class RegisterDescriptor {
   private boolean[] registers;
   private int current; // index of most recent available register
+  private int branch_index; // index to create unique branch labels
+                          // for If, Repeat, While instructions
 
   public RegisterDescriptor() {
     // r0 - r12 can be used freely
     this.registers = new boolean[13];
+    this.current = 0;
+    this.branch_index = 0;
     this.reset();
   }
 
@@ -42,5 +46,13 @@ public class RegisterDescriptor {
       }
     }
     return "full";
+  }
+
+  public int getBranchIndex() {
+    return this.branch_index;
+  }
+
+  public void incBranchIndex() {
+    this.branch_index++;
   }
 }

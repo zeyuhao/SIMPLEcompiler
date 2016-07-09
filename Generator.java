@@ -30,14 +30,7 @@ public class Generator {
   public String generateCode() throws Exception {
     this.initialize();
     this.process();
-    this.code += "\tpop {pc}\n\n";
-    if (this.code.contains("printf")) {
-      this.code += "wformat : .asciz \"%d\\n\"\n";
-    }
-    if (this.code.contains("scanf")) {
-      this.code += "rformat : .asciz \"%d\"\n\n";
-    }
-    this.code += this.code_end;
+    this.end();
     return this.code;
   }
 
@@ -81,5 +74,16 @@ public class Generator {
     this.code += ".text\n.global main\n\nmain:\n";
     this.code += "\tpush {lr}\n\n";
     this.code += this.ast.generateCode(this.env, this.reg);
+  }
+
+  private void end() {
+    this.code += "\tpop {pc}\n\n";
+    if (this.code.contains("printf")) {
+      this.code += "wformat : .asciz \"%d\\n\"\n";
+    }
+    if (this.code.contains("scanf")) {
+      this.code += "rformat : .asciz \"%d\"\n\n";
+    }
+    this.code += this.code_end;
   }
 }

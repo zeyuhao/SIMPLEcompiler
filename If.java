@@ -47,15 +47,67 @@ public class If extends Instruction {
   public void run(Environment env) throws Exception {
     if (this.cond.isTrue(env)) {
       this.instr_true.interpret(env);
-    } else if (this.instr_false != null) {
+    } else if (this.hasFalse()) {
       this.instr_false.interpret(env);
     }
   }
 
   public String generateCode(Environment env, RegisterDescriptor reg)
     throws Exception {
-    String str = "";
-    return str;
+    String code = "";
+    String start_label = "start_if" + reg.getBranchIndex();
+    String end_label = "end_if" + reg.getBranchIndex();
+    String if_label = "if" + reg.getBranchIndex();
+    reg.incBranchIndex();
+
+    code += start_label + ":\n";
+
+    // Next, generate code to test if condition is true or false
+    Expression left = this.cond.getLeft();
+    Expression right = this.cond.getRight();
+    // Assign Register to store Variable value of left Expression
+    String left_reg = reg.available();
+    reg.setInUse();
+    // Assign Register to store value of Right Expression
+    String right_reg = reg.available();
+    reg.setInUse();
+    // Store Constant value of left Expression directly into left_exp
+    if (left.isConstant()) {
+      code += this.moveConstant(left, left_reg);
+    } else {
+      code += this.getExpCode(left, env, reg, left_reg);
+    }
+    // Store value of right Expression into right_reg
+    if (right.isConstant()) {
+      code += this.moveConstant(right, right_reg);
+    } else {
+      code += this.getExpCode(right, env, reg, right_reg);
+    }
+    code += "\tcmp " + left_reg + ", " + right_reg + "\n";
+    reg.reset(); // reset the registers to process instructions
+
+    // conditional flag
+    String flag = this.cond.getFlag();
+
+    String if_section = if_label + ":\n";
+    if_section += this.instr_true.generateCode(env, reg);
+    if_section += "\tb " + end_label + "\n";
+
+    // If the Else instruction exists
+    if (this.hasFalse()) {
+      String else_label = "else" + reg.getBranchIndex();
+      code += "\t" + flag + " " + else_label + "\n";
+      code += if_section;
+      code += else_label + ":\n";
+      code += this.instr_false.generateCode(env, reg);
+      code = removeTrailingNewLine(code);
+    } else {
+      code += "\t" + flag + " " + end_label + "\n\n";
+      code += if_section;
+    }
+    // end if
+    code += end_label + ":\n\n";
+    return code;
   }
 
   public String toString() {

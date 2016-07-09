@@ -63,6 +63,24 @@ public class Condition extends Instruction {
     }
   }
 
+  public String getFlag() {
+    String op = this.relation.returnVal();
+    switch(op) {
+      case "=":
+        return "bne";
+      case "#":
+        return "beq";
+      case "<":
+        return "bge";
+      case ">":
+        return "ble";
+      case "<=":
+        return "bgt";
+      default:
+        return "blt";
+    }
+  }
+
   public String toString() {
     return "Condition (" + this.relation.returnVal() + ")" +
       "\nLeft =>\n  " + this.left.toString() +

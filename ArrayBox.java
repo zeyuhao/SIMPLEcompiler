@@ -7,12 +7,14 @@ import java.util.ArrayList;
 
 public class ArrayBox extends Box {
   private Box[] array;
-  private Type type; // element Type
+  private Type type; // The Array itself
+  private Type elemType; // element Type of Array
 
   // Create an ArrayBox based directly off of the S.T Array Entry
   public ArrayBox(Type array, int address) {
     int size = ((Array)array).length();
-    this.type = array.getType(); // store the element type
+    this.type = array;
+    this.elemType = array.getType(); // store the element type
     this.array = new Box[size];
     this.address = address;
     this.initialize();
@@ -20,20 +22,20 @@ public class ArrayBox extends Box {
 
   // Initialize each element of the Array
   private void initialize() {
-    if (this.type.isInteger()) {
+    if (this.elemType.isInteger()) {
       for (int i = 0; i < this.getSize(); i++) {
-        int curr_address = i * this.type.getMemSpace() + this.address;
+        int curr_address = i * this.elemType.getMemSpace() + this.address;
         this.setBox(i, new IntegerBox(curr_address));
       }
-    } else if (this.type.isArray()) {
+    } else if (this.elemType.isArray()) {
       for (int i = 0; i < this.getSize(); i++) {
-        int curr_address = i * this.type.getMemSpace() + this.address;
-        this.setBox(i, new ArrayBox(this.type, curr_address));
+        int curr_address = i * this.elemType.getMemSpace() + this.address;
+        this.setBox(i, new ArrayBox(this.elemType, curr_address));
       }
-    } else if (this.type.isRecord()) {
+    } else if (this.elemType.isRecord()) {
       for (int i = 0; i < this.getSize(); i++) {
-        int curr_address = i * this.type.getMemSpace() + this.address;
-        this.setBox(i, new RecordBox(this.type, curr_address));
+        int curr_address = i * this.elemType.getMemSpace() + this.address;
+        this.setBox(i, new RecordBox(this.elemType, curr_address));
       }
     }
   }
@@ -55,6 +57,10 @@ public class ArrayBox extends Box {
     return this.type;
   }
 
+  public Type getElemType() {
+    return this.elemType;
+  }
+
   public boolean isArray() {
     return true;
   }
@@ -64,20 +70,27 @@ public class ArrayBox extends Box {
   }
 
   public Box[] deepCopy() {
+    // Make an empty copy with same size
     Box[] copy = new Box[this.getSize()];
+    // Iterate through each element of the current ArrayBox
     for (int i = 0; i < this.getSize(); i++) {
       Box box = this.getBox(i);
+      // If element is an IntegerBox
       if (box.isInteger()) {
-        int value = ((IntegerBox)box).getVal();
-        copy[i] = new IntegerBox(box.getAddress());
-        ((IntegerBox)copy[i]).setBox(value);
-      } else if (box.isArray()) {
-        System.out.println(box.toString());
-        copy[i] = new ArrayBox(this.type, box.getAddress());
+        // Invoke IntegerBox's deepCopy()
+        copy[i] = ((IntegerBox)box).deepCopy();
+      }
+      // If element is another ArrayBox
+      else if (box.isArray()) {
+        // this.elemType refers to this ArrayBox's element Type
+        copy[i] = new ArrayBox(this.elemType, box.getAddress());
         ((ArrayBox)copy[i]).setArray(((ArrayBox)box).deepCopy());
-      } else if (box.isRecord()) {
-        copy[i] = new RecordBox(this.type.getType(), box.getAddress());
+      }
+      // If element is a RecordBox
+      else if (box.isRecord()) {
+        copy[i] = new RecordBox(this.elemType, box.getAddress());
         ((RecordBox)copy[i]).setRecord(((RecordBox)box).deepCopy());
+        System.out.println("RecordBox element");
       }
     }
     return copy;
@@ -86,10 +99,6 @@ public class ArrayBox extends Box {
   // Deep copy of other ArrayBox for assigning ArrayBox to ArrayBox
   public void assign(ArrayBox other) {
     this.array = other.deepCopy();
-    /*this.array = new Box[other.getSize()];
-    for (int i = 0; i < other.getSize(); i++) {
-      this.setBox(i, other.getBox(i));
-    }*/
   }
 
   public String toString() {

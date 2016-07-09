@@ -104,6 +104,12 @@ public class Instruction extends Node {
     return box;
   }
 
+  /**
+   * Generate code to move a Constant value into a given Register
+   * @param exp the Expression that contains the constant
+   * @param reg_name the name of the register that will hold the value
+   * @return the generated code
+   */
   public String moveConstant(Expression exp, String reg_name) {
     int value = exp.returnNumber().returnVal();
     return "\tmov " + reg_name + ", #" + value + "\n";
@@ -197,6 +203,13 @@ public class Instruction extends Node {
     return str;
   }
 
+  public String removeTrailingNewLine(String str) {
+    int index = str.lastIndexOf("\n");
+    if (index != -1) {
+      str = str.substring(0, index);
+    }
+    return str;
+  }
   public String accept(Visitor visitor) {
     return "";
   }
