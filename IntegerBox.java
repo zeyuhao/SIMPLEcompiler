@@ -35,6 +35,6 @@ public class IntegerBox extends Box {
   }
 
   public String toString() {
-    return "Integer: " + this.value + " of address: " + this.address;
+    return "IntegerBox: " + this.value + " of address: " + this.address;
   }
 }

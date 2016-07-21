@@ -6,7 +6,7 @@ zhao7@jhu.edu
 public class Read extends Instruction {
   private Location loc;
 
-  public Read(Location loc) {
+  public Read(Location loc) throws Exception {
     this.loc = loc;
     loc.setParent(this);
   }
@@ -29,26 +29,35 @@ public class Read extends Instruction {
 
   public String generateCode(Environment env, RegisterDescriptor reg)
     throws Exception {
-    String str = "";
+    String code = "";
     String reg_0 = reg.available();
     reg.setInUse();
-    str += "\tldr " + reg_0 + ", =rformat\n";
-    Location base = this.getBase(this.loc);
-    String name = base.toString();
-    int addr = this.getEnvBox(base, env).getAddress();
     String reg_1 = reg.available();
     reg.setInUse();
-    String reg_2 = reg.available();
+    String addr_reg = reg.available();
     reg.setInUse();
-    String reg_3 = reg.available();
-    reg.setInUse();
-    str += "\tldr " + reg_2 + ", addr_" + name + "\n";
-    str += "\tmov " + reg_3 + ", #" + addr + "\n";
-    str += "\tadd " + reg_2 + ", " + reg_2 + ", " + reg_3 + "\n";
-    str += "\tmov " + reg_1 + ", " + reg_2 + "\n";
-    str += "\tbl scanf\n\n";
+    Location base = this.getBase(this.loc);
+    String name = base.toString();
+    code += "\tldr " + reg_0 + ", =rformat\n";
+    code += "\tldr " + addr_reg + ", addr_" + name + "\n";
+
+    // If base Location is an Array or Record, we need to get the address
+    if (base.getType().isArray() || base.getType().isRecord()) {
+      // Offset address will be stored in a register
+      // Register used to calculate the offset for addresses
+      String offset_reg = reg.available();
+      reg.setInUse();
+      code += this.getAddressCode(base, env, offset_reg, reg);
+      code += "\tadd " + addr_reg + ", " + addr_reg + ", " + offset_reg + "\n";
+    } else {
+      // Offset address will be a constant number
+      String address = "#" + this.getEnvBox(base, env).getAddress();
+      code += "\tadd " + addr_reg + ", " + addr_reg + ", " + address + "\n";
+    }
+    code += "\tmov " + reg_1 + ", " + addr_reg + "\n";
+    code += "\tbl scanf\n\n";
     reg.reset();
-    return str;
+    return code;
   }
 
   public String toString() {

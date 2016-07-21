@@ -11,10 +11,21 @@ import java.lang.Integer;
 public class Environment {
   private Map<String, Box> environment;
   private BufferedReader in;
+  private String helpers; // helper code used for formatting text based off
+                          // of context info
 
   public Environment() {
-    environment = new TreeMap<String, Box>();
-    in = new BufferedReader(new InputStreamReader(System.in));
+    this.environment = new TreeMap<String, Box>();
+    this.in = new BufferedReader(new InputStreamReader(System.in));
+    this.helpers = "";
+  }
+
+  public void addHelpers(String code) {
+    this.helpers += code;
+  }
+
+  public String getHelpers() {
+    return this.helpers;
   }
 
   public void insertBox(String name, Box box) {

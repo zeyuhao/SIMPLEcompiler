@@ -39,6 +39,11 @@ public class Expression extends Node {
     return (this.number != null && this.type.isInteger());
   }
 
+  // Checking that number != null ensures it's not a Variable
+  public boolean isExpLocation() {
+    return this.returnLoc() != null;
+  }
+
   public boolean isBinary() {
     return false;
   }

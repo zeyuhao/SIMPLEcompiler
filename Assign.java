@@ -37,8 +37,6 @@ public class Assign extends Instruction {
     } else if (box.isArray() && exp_box.isArray()) {
       // Deep copy of ArrayBox
       ((ArrayBox)box).assign((ArrayBox)exp_box);
-      System.out.println(box.toString());
-      System.out.println(exp_box.toString());
     } else if (box.isRecord() && exp_box.isRecord()) {
       // Deepy copy of RecordBox
       ((RecordBox)box).assign((RecordBox)exp_box);
@@ -47,26 +45,43 @@ public class Assign extends Instruction {
 
   public String generateCode(Environment env, RegisterDescriptor reg)
     throws Exception {
-    String str = "";
+    String code = "";
+    // base should always be a Variable
     Location base = this.getBase(this.loc);
     String name = base.toString();
-    int addr = this.getEnvBox(base, env).getAddress();
+    String address = "";
+    // If base Location is an Array or Record, we need to get the address
+    if (base.getType().isArray() || base.getType().isRecord()) {
+      // Register used to calculate the offset for addresses
+      String offset_reg = reg.available();
+      reg.setInUse();
+      code += this.getAddressCode(base, env, offset_reg, reg);
+      address = offset_reg;
+    } else {
+      address = "#" + this.getEnvBox(base, env).getAddress();
+    }
     String loc_reg = reg.available();
     reg.setInUse();
     String val_reg = reg.available();
     reg.setInUse();
-    // First load loc_reg with the addr of the location we are assigning to
-    str += "\tldr " + loc_reg + ", addr_" + name + "\n";
+    // First load loc_reg with the base addr of the location we are assigning to
+    code += "\tldr " + loc_reg + ", addr_" + name + "\n";
+    // Preserve r0
+    code += reg.push(loc_reg);
     if (this.exp.isConstant()) {
-      str += this.moveConstant(this.exp, val_reg);
+      code += this.moveConstant(this.exp, val_reg);
     } else {
-      str += this.getExpCode(this.exp, env, reg, val_reg);
+      code += this.getExpCode(this.exp, env, reg, val_reg);
     }
     // Store value inside val_reg into loc_reg at offset addr
-    str += "\tstr " + val_reg + ", [" + loc_reg + ", +#" + addr + "]\n\n";
+    // Pop off all registers except for r0 from stack
+    code += reg.popAll(loc_reg);
+    // Restore r0 last
+    code += reg.pop(loc_reg);
+    code += "\tstr " + val_reg + ", [" + loc_reg + ", +" + address + "]\n\n";
     // Reset all registers for use in the next Instruction
     reg.reset();
-    return str;
+    return code;
   }
 
   public String toString() {

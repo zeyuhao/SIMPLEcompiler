@@ -90,7 +90,6 @@ public class ArrayBox extends Box {
       else if (box.isRecord()) {
         copy[i] = new RecordBox(this.elemType, box.getAddress());
         ((RecordBox)copy[i]).setRecord(((RecordBox)box).deepCopy());
-        System.out.println("RecordBox element");
       }
     }
     return copy;

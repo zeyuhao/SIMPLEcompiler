@@ -47,7 +47,7 @@ public class Generator {
     this.used_mem += size;
     this.code += ".balign 4" + "\n";
     this.code += name + ": .skip " + size + "\n\n";
-    this.code_end += "addr_" + name + " : .word " + name + "\n";
+    this.code_end += "addr_" + name + ": .word " + name + "\n";
   }
 
   // Generate code to initialize all variables from symbol table
@@ -77,12 +77,18 @@ public class Generator {
   }
 
   private void end() {
+    this.code += "end:\n";
     this.code += "\tpop {pc}\n\n";
     if (this.code.contains("printf")) {
-      this.code += "wformat : .asciz \"%d\\n\"\n";
+      this.code += "wformat: .asciz \"%d\\n\"\n";
     }
     if (this.code.contains("scanf")) {
-      this.code += "rformat : .asciz \"%d\"\n\n";
+      this.code += "rformat: .asciz \"%d\"\n\n";
+    }
+    // Add helper code for error formatting (array out of bounds)
+    String helpers = this.env.getHelpers();
+    if (!helpers.isEmpty()) {
+      this.code += helpers + "\n";
     }
     this.code += this.code_end;
   }

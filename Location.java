@@ -17,6 +17,10 @@ public class Location extends Node {
     this.token = token;
   }
 
+  public Variable getVariable() {
+    return this.var;
+  }
+
   public String nodeType() {
     return "location";
   }

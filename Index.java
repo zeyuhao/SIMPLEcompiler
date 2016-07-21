@@ -12,7 +12,7 @@ public class Index extends Location {
     this.loc = loc;
     this.exp = exp;
     this.token = exp.getToken();
-    this.type = ((Array) loc.getType()).getType();
+    this.type = ((Array)loc.getType()).getType();
 
     // Makes sure that the Index is referenced by an Integer
     if (!this.exp.getType().isInteger()) {
@@ -33,6 +33,16 @@ public class Index extends Location {
 
   public Expression getExp() {
     return this.exp;
+  }
+
+  // Return the total size of the Array
+  public int getSize() {
+    return ((Array)this.loc.getType()).getMemSpace();
+  }
+
+  // Return the total number of elements of the Array
+  public int length() {
+    return ((Array)this.loc.getType()).length();
   }
 
   public String toString() {
