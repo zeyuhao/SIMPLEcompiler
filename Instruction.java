@@ -239,6 +239,7 @@ public class Instruction extends Node {
           code += reg.popAll();
           // After printing the error, go to end
           code += "\tb end\n";
+          // reset register used to store size
           reg.reset(size_reg);
 
           // Skip to this part if index selector is not out of bounds
@@ -426,11 +427,12 @@ public class Instruction extends Node {
       Location base = this.getBase(exp.returnLoc());
       String name = base.toString();
       String address = "";
+      String offset_reg = "";
       // If base Location is an Array or Record, we need to get the address
       if (base.getType().isArray() || base.getType().isRecord()) {
         // Offset address will be stored in a register
         // Register used to calculate the offset for addresses
-        String offset_reg = reg.available();
+        offset_reg = reg.available();
         reg.setInUse();
         code += this.getAddressCode(base, env, offset_reg, reg);
         address = offset_reg;
@@ -438,12 +440,12 @@ public class Instruction extends Node {
         // Offset address will be a constant number
         address = "#" + this.getEnvBox(base, env).getAddress();
       }
-      String next_reg = reg.available();
-      reg.setInUse();
-      code += "\tldr " + next_reg + ", addr_" + name + "\n";
-      code += "\tldr " + reg_name + ", [" + next_reg + ", +" + address + "]\n";
-      // Don't need next_reg anymore after its value is transferred
-      reg.reset(next_reg);
+      code += "\tldr " + reg_name + ", addr_" + name + "\n";
+      code += "\tldr " + reg_name + ", [" + reg_name + ", +" + address + "]\n";
+      // reset the register used to hold offset if it was used
+      if (!offset_reg.isEmpty()) {
+        reg.reset(offset_reg);
+      }
     }
     return code;
   }
