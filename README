@@ -18,6 +18,8 @@ passed to it from bash and feeds it to my Java driver.
 
 Usage:
 "./sc" ["-" ("s"|"c"|"t"|"a"|"i")] ["-g"] [filename]
+
+If no command line arguments are given, the code generator will run.
 if no filename is given, the driver prompts for input from stdin.
 
 The compiler can be run with the following options:
