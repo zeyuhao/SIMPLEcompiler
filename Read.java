@@ -55,6 +55,8 @@ public class Read extends Instruction {
       code += "\tadd " + addr_reg + ", " + addr_reg + ", " + address + "\n";
     }
     code += "\tmov " + reg_1 + ", " + addr_reg + "\n";
+    // Restore all registers from stack
+    code += reg.popAll();
     code += "\tbl scanf\n\n";
     reg.reset();
     return code;

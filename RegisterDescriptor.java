@@ -15,6 +15,10 @@ public class RegisterDescriptor {
   private int branch_index;
   // index to create unique format labels for error messages
   private int error_index;
+  // boolean to keep track of whether or there are registers pushed onto the
+  // stack becaused pushUsed() was called (registers were full at some point)
+  private boolean full;
+  private RegisterDescriptor parent;
 
   public RegisterDescriptor() {
     // r0 - r12 can be used freely
@@ -23,7 +27,21 @@ public class RegisterDescriptor {
     this.current = 0;
     this.branch_index = 0;
     this.error_index = 0;
-    this.reset();
+    this.full = false;
+    this.parent = null;
+    this.reset(); //safety measure, not really needed
+  }
+
+  public void setParent(RegisterDescriptor parent) {
+    this.parent = parent;
+  }
+
+  public RegisterDescriptor getParent() {
+    return this.parent;
+  }
+
+  public int getCurrent() {
+    return this.current;
   }
 
   // Reset all registers
@@ -32,6 +50,7 @@ public class RegisterDescriptor {
       this.registers[i] = false; // reset all to false for 'unused'
     }
   }
+
   /** Overloaded function.
    *  Reset the specified register(s)
    */
@@ -60,14 +79,10 @@ public class RegisterDescriptor {
     this.registers[this.current] = true;
   }
 
-  private void setCurrent(int index) {
-    this.current = index;
-  }
-
   public String available() {
     for (int i = 0; i < this.registers.length; i++) {
       if (!this.registers[i]) {
-        this.setCurrent(i);
+        this.current = i;
         return "r" + i;
       }
     }
@@ -97,12 +112,33 @@ public class RegisterDescriptor {
     return this.stack[reg];
   }
 
+  /* Do we currently have registers pushed onto the stack because at some
+   * point all registers were full?
+   */
+  public boolean isFull() {
+    return this.full;
+  }
+
+  public void setFull() {
+    this.full = true;
+  }
+
   /* Push the specified register onto the stack
    */
   public String push(String reg_name) {
     int reg = Integer.parseInt(reg_name.substring(1, reg_name.length()));
     this.stack[reg] = true;
     return "\tpush {" + reg_name + "}\n";
+  }
+
+  /* Push all used registers onto the stack. This method is used when all
+   * registers will be full, and we need to free up space.
+   */
+  public String pushUsed() {
+    for (int reg = 1; reg <= this.current; reg++) {
+      this.stack[reg] = true;
+    }
+    return "\tpush {r1-r" + this.current + "}\n";
   }
 
   /* Pop the specified register off of the stack

@@ -274,6 +274,11 @@ public class Instruction extends Node {
     return code;
   }
 
+  /**
+   * Generate code to evaluate the Expression component of an
+   * Instruction.
+   * @param code the pointer to the code from an Instruction
+   */
   public String getExpCode(Expression exp, Environment env,
     RegisterDescriptor reg, String reg_name) throws Exception {
     String code = "";
@@ -285,6 +290,18 @@ public class Instruction extends Node {
         code += this.getExpCode(left, env, reg, reg_name);
       }
       String next_reg = reg.available();
+      // If we have run out of registers
+      if (next_reg.equals("full")) {
+        // push currently used registers to the stack
+        code += reg.pushUsed();
+        RegisterDescriptor new_reg = new RegisterDescriptor();
+        new_reg.setParent(reg);
+        reg = new_reg;
+        // reset all except r0
+        reg.setFull();
+        reg.setInUse(); // While parent register is full, don't use r0
+        next_reg = reg.available();
+      }
       if (!right.isConstant()) {
         reg.setInUse();
         code += this.getExpCode(right, env, reg, next_reg);
@@ -308,6 +325,10 @@ public class Instruction extends Node {
         } else {
           if (reg.isPushed(next_reg)) {
             code += reg.pop(next_reg);
+          }
+          // If we are done operating on all registers and can free up space
+          if (reg.isFull() && next_reg.equals("r1")) {
+            reg = reg.getParent();
           }
           if (reg.isPushed(reg_name)) {
             code += reg.pop(reg_name);
@@ -428,23 +449,30 @@ public class Instruction extends Node {
       String name = base.toString();
       String address = "";
       String offset_reg = "";
-      // If base Location is an Array or Record, we need to get the address
-      if (base.getType().isArray() || base.getType().isRecord()) {
-        // Offset address will be stored in a register
-        // Register used to calculate the offset for addresses
-        offset_reg = reg.available();
-        reg.setInUse();
-        code += this.getAddressCode(base, env, offset_reg, reg);
-        address = offset_reg;
+      Box box = this.getEnvBox(base, env);
+      Box exp_box = this.getExpBox(exp, env);
+      if ((box.isArray() && exp_box.isArray()) ||
+          (box.isRecord() && exp_box.isRecord())) {
+        code += "\tldr " + reg_name + ", addr_" + name + "\n";
       } else {
-        // Offset address will be a constant number
-        address = "#" + this.getEnvBox(base, env).getAddress();
-      }
-      code += "\tldr " + reg_name + ", addr_" + name + "\n";
-      code += "\tldr " + reg_name + ", [" + reg_name + ", +" + address + "]\n";
-      // reset the register used to hold offset if it was used
-      if (!offset_reg.isEmpty()) {
-        reg.reset(offset_reg);
+        // If base Location is an Index or RecordField, we need to get the address
+        if (base.getType().isArray() || base.getType().isRecord()) {
+          // Offset address will be stored in a register
+          // Register used to calculate the offset for addresses
+          offset_reg = reg.available();
+          reg.setInUse();
+          code += this.getAddressCode(base, env, offset_reg, reg);
+          address = offset_reg;
+        } else {
+          // Offset address will be a constant number
+          address = "#" + this.getEnvBox(base, env).getAddress();
+        }
+        code += "\tldr " + reg_name + ", addr_" + name + "\n";
+        code += "\tldr " + reg_name + ", [" + reg_name + ", +" + address + "]\n";
+        // reset the register used to hold offset if it was used
+        if (!offset_reg.isEmpty()) {
+          reg.reset(offset_reg);
+        }
       }
     }
     return code;

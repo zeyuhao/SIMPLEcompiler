@@ -233,12 +233,14 @@ public class Sc {
         }
         parser.parse();
         String code = parser.generateCode();
-        if (!input_file.isEmpty()) {
-          String output_file = addExtention(stripExtension(input_file), "s");
-          createFile(output_file);
-          writeFile(output_file, code);
-        } else {
-          System.out.println(code);
+        if (!code.equals("")) {
+          if (!input_file.isEmpty()) {
+            String output_file = addExtention(stripExtension(input_file), "s");
+            createFile(output_file);
+            writeFile(output_file, code);
+          } else {
+            System.out.println(code);
+          }
         }
       }
     } catch (Exception e) {

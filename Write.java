@@ -27,20 +27,22 @@ public class Write extends Instruction {
 
   public String generateCode(Environment env, RegisterDescriptor reg)
     throws Exception {
-    String str = "";
+    String code = "";
     String reg_0 = reg.available();
     reg.setInUse();
-    str += "\tldr " + reg_0 + ", =wformat\n";
+    code += "\tldr " + reg_0 + ", =wformat\n";
     String reg_1 = reg.available();
     reg.setInUse();
     if (this.exp.isConstant()) {
-      str += this.moveConstant(this.exp, reg_1);
+      code += this.moveConstant(this.exp, reg_1);
     } else {
-      str += this.getExpCode(this.exp, env, reg, reg_1);
+      code += this.getExpCode(this.exp, env, reg, reg_1);
     }
-    str += "\tbl printf\n\n";
+    // Restore all registers from stack
+    code += reg.popAll();
+    code += "\tbl printf\n\n";
     reg.reset();
-    return str;
+    return code;
   }
 
   public String toString() {

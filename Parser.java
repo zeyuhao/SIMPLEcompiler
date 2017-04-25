@@ -1121,7 +1121,11 @@ public class Parser {
    * @return the generated code
    */
   public String generateCode() throws Exception {
-    this.gen = new Generator(this.curr_scope, this.env, this.ast);
-    return this.gen.generateCode();
+    String code = "";
+    if (this.ast != null) {
+      this.gen = new Generator(this.curr_scope, this.env, this.ast);
+      code = this.gen.generateCode();
+    }
+    return code;
   }
 }
