@@ -1,6 +1,4 @@
 *.class
-*.sim
 *.swp
-*.s
 *.png
 *.dot

@@ -1,0 +1,50 @@
+PROGRAM deepcopy;
+
+CONST size = 3;
+TYPE bigstruct = 
+  ARRAY size OF RECORD f: RECORD f: RECORD f: ARRAY size OF INTEGER; END; END; END;
+VAR z: bigstruct;
+VAR v: bigstruct;
+VAR i: INTEGER;
+
+BEGIN
+  WHILE i < size DO               (* Read values into z *)
+    READ z[0].f.f.f[i];
+    i := i + 1
+  END;
+  i := 0; 
+  
+  WHILE i < size DO               (* Check that values were inserted correctly *)
+    WRITE z[0].f.f.f[i];
+    i := i + 1
+  END;
+  i := 0; 
+  
+  v := z;                         (* Deep copy z to v *)
+  
+  WHILE i < size DO               (* Check that deep copy worked *)
+    WRITE v[0].f.f.f[i];
+    i := i + 1
+  END;
+  i := 0; 
+
+  WHILE i < size DO               (* Insert new values into v *)
+    READ v[0].f.f.f[i];
+    i := i + 1
+  END;
+  i := 0;
+
+  WHILE i < size DO               (* Check that new values were inserted correctly *)
+    WRITE v[0].f.f.f[i];
+    i := i + 1
+  END;
+  i := 0;
+  
+  WHILE i < size DO                  
+    WRITE z[0].f.f.f[i];          (* Check that z is not affected by changes to v *)
+    i := i + 1
+  END;
+  
+  READ z[0].f.f.f[0];            (* Check that v is not affected by changes to z *)
+  WRITE v[0].f.f.f[0]
+END deepcopy.

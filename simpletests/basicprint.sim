@@ -1,0 +1,8 @@
+PROGRAM basicprint;
+CONST
+  a = 47;
+VAR
+  b: INTEGER;
+BEGIN
+  WRITE 47
+END basicprint.

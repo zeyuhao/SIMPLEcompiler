@@ -1,0 +1,9 @@
+PROGRAM nested;
+VAR
+  z: INTEGER;
+  a: INTEGER;
+BEGIN
+  READ a;
+  z := (a+1+(a+1+(a+1+(a+1+(a+1+(a+1+(a+1+(a+1+(a+1+(a+1))))))))));
+  WRITE z
+END nested.

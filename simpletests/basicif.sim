@@ -1,0 +1,16 @@
+PROGRAM basicif;
+CONST
+  a = 47;
+VAR
+  b: INTEGER;
+  c: INTEGER;
+  d: ARRAY a OF ARRAY a OF RECORD key: INTEGER; END;
+BEGIN
+  READ b;
+  READ c;
+  IF b = c THEN b := 100 ELSE b := 0 END;
+  WRITE b;
+  d[46][46].key := a;
+  WRITE d[46][46].key;
+  WRITE d[46][45].key
+END basicif.

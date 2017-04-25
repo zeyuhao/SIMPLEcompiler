@@ -1,0 +1,24 @@
+PROGRAM As3;
+TYPE X = ARRAY 12 OF ARRAY 12 OF ARRAY 12 OF RECORD f: RECORD f: RECORD f: ARRAY 5 OF INTEGER; END; END; END;
+TYPE Y = ARRAY 12 OF RECORD f: RECORD f: RECORD f: ARRAY 5 OF INTEGER; END; END; END;
+TYPE Z = ARRAY 2 OF RECORD f: ARRAY 2 OF RECORD f: ARRAY 2 OF RECORD f: INTEGER; END; END; END;
+VAR z: Y;
+VAR v: Y;
+VAR r: X;
+VAR p: X;
+VAR s: Z;
+BEGIN
+  READ z[7].f.f.f[4];             (* Read in a value to array z*)
+  WRITE z[7].f.f.f[4];            (* Write it back out *)
+  v[7].f.f.f[4] := z[7].f.f.f[4]; (* copy value from z to v*)
+  WRITE v[7].f.f.f[4];            (* Write v to output *)
+  READ v[7].f.f.f[4];             (* Read in a value to v *)
+  WRITE v[7].f.f.f[4];            (* Write v to output *)
+  WRITE z[7].f.f.f[4];            (* Check that v is indeed a deep copy, and z is not effected by previous write *)
+  READ r[7][7][7].f.f.f[4];       (* Large nested variable check *)
+  WRITE r[7][7][7].f.f.f[4];
+  r := p;
+  WRITE r[7][7][7].f.f.f[4];
+  READ s[1].f[1].f[1].f;
+  WRITE s[1].f[1].f[1].f
+END As3.

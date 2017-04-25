@@ -1,0 +1,17 @@
+PROGRAM basicassign;
+CONST
+  a = 47;
+VAR
+  c: INTEGER;
+  arr: ARRAY 2 OF ARRAY 2 OF INTEGER;
+  arr2: ARRAY 2 OF RECORD g,f,z,y: INTEGER; END;
+BEGIN
+  READ c;
+  WRITE c;
+  arr[0][c] := a;
+  WRITE arr[0][c];
+  WRITE arr[1][c] + arr[0][c];
+  arr2[c].g := a;
+  READ c;
+  WRITE arr2[c].g
+END basicassign.

@@ -1,0 +1,23 @@
+PROGRAM simplearraycopy;
+
+CONST size = 3;
+TYPE smallstruct = ARRAY 5 OF INTEGER;
+VAR z: smallstruct;
+VAR v: smallstruct;
+
+BEGIN
+  z[0] := 5;
+  z[1] := 5;
+  
+  WRITE z[0];
+  WRITE z[1];
+
+  v := z;
+  
+  WRITE v[0];
+  WRITE v[1];
+  
+  v[1] := 10;
+  
+  WRITE v[1]
+END simplearraycopy.

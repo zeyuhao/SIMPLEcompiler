@@ -1,0 +1,11 @@
+PROGRAM basicarith;
+VAR
+  a: INTEGER;
+  b: INTEGER;
+  c: INTEGER;
+BEGIN
+  READ b;
+  READ c;
+  a := b DIV c;
+  WRITE a
+END basicarith.

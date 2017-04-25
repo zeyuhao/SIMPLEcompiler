@@ -1,0 +1,10 @@
+PROGRAM nestedarray;
+VAR
+  z: INTEGER;
+  a: ARRAY 5 OF RECORD b: INTEGER; END;
+BEGIN
+  READ z;
+  READ a[z].b;
+  z := (a[z].b + (a[z].b + (a[z].b + (a[z].b + (a[z].b + (a[z].b + (a[z].b + (a[z].b + (a[z].b)))))))));
+  WRITE z
+END nestedarray.

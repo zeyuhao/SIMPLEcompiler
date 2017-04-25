@@ -1,0 +1,9 @@
+PROGRAM outofbounds;
+VAR
+  arr: ARRAY 5 OF INTEGER;
+  index: INTEGER;
+BEGIN
+  READ index;
+  arr[index] := 50;
+  WRITE arr[index]
+END outofbounds.

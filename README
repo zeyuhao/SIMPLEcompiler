@@ -1,16 +1,71 @@
-Zeyu Hao
-zhao7@jhu.edu
-SIMPLE Compiler
+A SIMPLE Compiler
 
-Makefile
+This project is a Java based compiler that translates a language
+called SIMPLE (a simplified version of Oberon) into ARMv6 assembly.
+Many command line options are available for showing the specific parts
+of the compiler, for example breaking up a SIMPLE program into
+an abstract syntax tree, or generating a symbol table.
+
+Example SIMPLE program:
 ===================================================================
-There is a simple makefile included that will compile all the Java
-programs needed in the package.
-To use, simple enter 'make' or 'make all'.
+PROGRAM basicprint;
+CONST
+  a = 47;
+VAR
+  b: INTEGER;
+BEGIN
+  WRITE 47
+END basicprint.
+===================================================================
+More example SIMPLE programs along with their corresponding generated
+assembly code are located inside the "simpletests" folder.
+
+Below are the Context-Free and Regular grammars describing how
+SIMPLE's syntax works:
+
+SIMPLE Context-Free Grammar
+===================================================================
+Program = "PROGRAM" identifier ";" Declarations
+  ["BEGIN" Instructions] "END" identifier "." .
+
+Declarations = { ConstDecl | TypeDecl | VarDecl } .
+ConstDecl = "CONST" {identifier "=" Expression ";"} .
+TypeDecl = "TYPE" {identifier "=" Type ";"} .
+VarDecl = "VAR" {IdentifierList ":" Type ";"} .
+
+Type = identifier | "ARRAY" Expression "OF" Type |
+  "RECORD" {IdentifierList ":" Type ";"} "END" .
+
+Expression = ["+"|"-"] Term {("+"|"-") Term} .
+Term = Factor {("*"|"DIV"|"MOD") Factor} .
+Factor = integer | Designator | "(" Expression ")" .
+
+Instructions = Instruction {";" Instruction} .
+Instruction = Assign | If | Repeat | While | Read | Write .
+Assign = Designator ":=" Expression .
+If = "IF" Condition "THEN" Instructions ["ELSE" Instructions] "END" .
+Repeat = "REPEAT" Instructions "UNTIL" Condition "END" .
+While = "WHILE" Condition "DO" Instructions "END" .
+Condition = Expression ("="|"#"|"<"|">"|"<="|">=") Expression .
+Write = "WRITE" Expression .
+Read = "READ" Designator .
+
+Designator = identifier Selector .
+Selector = {"[" ExpressionList "]" | "." identifier} .
+IdentifierList = identifier {"," identifier} .
+ExpressionList = Expression {"," Expression} .
 
 
+Regular Grammar
+===================================================================
+identifier = letter {letter | digit} .
+integer = digit {digit} .
+letter = "a" | "b" | .. | "z" | "A" | "B" | .. | "Z" .
+digit = "0" | "1" | .. | "9" .
 
-Running the driver
+###################################################################
+
+Running the compiler
 ===================================================================
 The driver 'Sc.java' is run by a shell script called 'sc'.
 The shell script 'sc' simply takes all command line arguments
@@ -37,6 +92,8 @@ as well as a message to stderr.
 
 The Scanner
 ===================================================================
+The scanner simply spits out all the tokens and their occurences
+for a given input program.
 One thing to note is that if the Scanner is currently nested within
 x levels of comments when EOF is reached, then a stderr message will
 be thrown describing this. Additionally, all tokens scanned up until
@@ -101,20 +158,6 @@ Node, which gets returned back to the instructions() function. This
 repeats until we finish parsing instructions(), in which case the
 fully finished AST node gets returned back to the original call to
 program(), which sets the global AST to the AST just returned.
-
-In this assignment, a previous error where we couldn't run an
-Instruction on a Location where Records were directly nested into
-each other has been fixed.
-Example:
----------------------------------------
-PROGRAM As3;
-  VAR v: ARRAY 12 OF RECORD f: RECORD f: RECORD f: INTEGER; END; END; END;
-BEGIN
-  z[7].f.f.f := 24
-END As3.
----------------------------------------
-The program above would have caused an incorrect error before because
-the find_record() function did not traverse through record scopes correctly.
 
 
 

@@ -1,0 +1,20 @@
+PROGRAM basicread;
+CONST
+  a = 47;
+VAR
+  c: INTEGER;
+  arr: ARRAY 2 OF ARRAY 2 OF INTEGER;
+  arr2: ARRAY 2 OF RECORD g,f,z,y: INTEGER; END;
+BEGIN
+  READ c;
+  WRITE c;
+
+  READ arr[c][c];
+  WRITE arr[0][c];
+  WRITE arr[c][c];
+
+  READ arr2[c].f;
+  WRITE arr2[c].f;
+  WRITE arr2[0].f
+  
+END basicread.

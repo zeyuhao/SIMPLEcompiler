@@ -1,0 +1,23 @@
+PROGRAM basicwhile;
+CONST
+  a = 50;
+  m = 100;
+  r = 1;
+VAR
+  Z: INTEGER; (* seed *)
+  g: INTEGER; (* temporary *)
+  ind: INTEGER;
+  q: INTEGER;
+BEGIN
+  READ Z;
+  READ q;
+  (* Forever... *)
+  WHILE ind < 5 DO
+    (* Should assign 48 to g *)
+    g := (a*(Z MOD q) - r*(Z DIV q)); (* 50*(Z MOD q) - 1*(Z DIV q) *)
+    IF g > 0 THEN Z := g ELSE Z := 200 END;
+    (* Prints 1 repeatedly until condition is false *)
+    WRITE Z;
+    ind := ind + 1
+  END
+END basicwhile.

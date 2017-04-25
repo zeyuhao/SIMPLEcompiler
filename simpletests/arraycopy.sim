@@ -1,0 +1,50 @@
+PROGRAM arraycopy;
+
+CONST size = 3;
+TYPE bigstruct = 
+  ARRAY size OF RECORD f: RECORD f: RECORD f: ARRAY size OF INTEGER; END; END; END;
+TYPE smallstruct = ARRAY size OF RECORD f: INTEGER; END;
+VAR z: smallstruct;
+VAR v: smallstruct;
+VAR i: INTEGER;
+
+BEGIN
+  
+  WHILE i < size DO               (* Read values into z *)
+    READ z[i].f;
+    i := i + 1
+  END;
+  i := 0;
+
+  WHILE i < size DO               (* Check that assignments for z worked *)
+    WRITE z[i].f;
+    i := i + 1
+  END;
+  i := 0;
+ 
+  v := z;                         (* Deep copy z to v *)
+  
+  WHILE i < size DO               (* Check that values .f.f v match z*)
+    WRITE v[i].f;
+    i := i + 1
+  END;
+  i := 0;
+
+  WHILE i < size DO               (* READ new values into v*)
+    READ v[i].f;
+    i := i + 1
+  END;
+  i := 0;
+
+  WHILE i < size DO               (* Chech that assignments to v are correct*)
+    WRITE v[i].f;
+    i := i + 1
+  END;
+  i := 0;
+
+  WHILE i < size DO               (* Check that z was not affected*)
+    WRITE z[i].f;
+    i := i + 1
+  END
+
+END arraycopy.

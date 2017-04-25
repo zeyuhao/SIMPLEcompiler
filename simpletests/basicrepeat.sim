@@ -1,0 +1,5 @@
+PROGRAM X;
+  VAR i: INTEGER;
+BEGIN
+  REPEAT WRITE i; i := i + 1 UNTIL i >= 5 END
+END X.
